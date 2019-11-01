@@ -1,6 +1,6 @@
 package com.goltd.agrigoussd.helpers;
 
-import java.util.Objects;
+import com.goltd.agrigoussd.helpers.enums.Freeflow;
 
 public class UssdResponse {
     private String message;
@@ -29,20 +29,6 @@ public class UssdResponse {
 
     public void setFreeflow(Freeflow freeflow) {
         this.freeflow = freeflow;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UssdResponse that = (UssdResponse) o;
-        return Objects.equals(message, that.message) &&
-                freeflow == that.freeflow;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(message, freeflow);
     }
 
     @Override

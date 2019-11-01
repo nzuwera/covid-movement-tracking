@@ -41,10 +41,10 @@ class UserServiceTest {
     @Test
     void testUpdate() {
         UserAccount userAccount = userService.getUserByMsisdn(msisdn);
-        userAccount.setRegistered(false);
+        userAccount.setActive(false);
         userService.update(userAccount);
         UserAccount updateUserAccount = userService.getUserByMsisdn(msisdn);
-        Assertions.assertFalse(updateUserAccount.getRegistered());
+        Assertions.assertFalse(updateUserAccount.getActive());
     }
 
     @DisplayName("Test UserService.getUserByMsisdn()")

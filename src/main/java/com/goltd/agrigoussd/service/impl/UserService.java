@@ -30,7 +30,7 @@ public class UserService implements IUserService {
         newUserAccount.setMsisdn(msisdn);
         newUserAccount.setFullname(msisdn);
         newUserAccount.setPin(msisdn);
-        newUserAccount.setRegistered(false);
+        newUserAccount.setActive(false);
         return userRepository.save(newUserAccount);
     }
 

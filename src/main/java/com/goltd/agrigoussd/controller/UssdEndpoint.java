@@ -1,9 +1,9 @@
 package com.goltd.agrigoussd.controller;
 
 
-import com.goltd.agrigoussd.helpers.Freeflow;
 import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
+import com.goltd.agrigoussd.helpers.enums.Freeflow;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
