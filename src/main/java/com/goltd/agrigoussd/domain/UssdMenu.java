@@ -51,7 +51,7 @@ public class UssdMenu {
     @Column(name = "PRIORITY")
     private int priority;
 
-    @Column(name = "VISIBILITY", nullable = false, columnDefinition = "varchar(50) default 'UNREG'")
+    @Column(name = "VISIBILITY", nullable = false, columnDefinition = "varchar(50) default 'UNREGISTERED'")
     private Visibility visibility;
 
     @ManyToOne()
