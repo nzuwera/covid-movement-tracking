@@ -37,7 +37,7 @@ public class UserAccount {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(name = "ACCCOUNT_STATE", nullable = false, columnDefinition = "varchar(10) default 'PENDING_SUBSCRIPTION'")
+    @Column(name = "ACCCOUNT_STATE", nullable = false, columnDefinition = "varchar(50) default 'PENDING_SUBSCRIPTION'")
     @Enumerated(EnumType.STRING)
     private AccountState accountState;
 

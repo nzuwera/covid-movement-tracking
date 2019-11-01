@@ -1,11 +1,14 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.UserAccount;
+import com.goltd.agrigoussd.helpers.enums.AccountState;
+import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.repository.UserRepository;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -30,7 +33,10 @@ public class UserService implements IUserService {
         newUserAccount.setMsisdn(msisdn);
         newUserAccount.setFullname(msisdn);
         newUserAccount.setPin(msisdn);
-        newUserAccount.setActive(false);
+        newUserAccount.setGender(Gender.MALE);
+        newUserAccount.setAccountState(AccountState.PENDING_SUBSCRIPTION);
+        newUserAccount.setExpireDate(new Date());
+        newUserAccount.setPin("12345");
         return userRepository.save(newUserAccount);
     }
 
