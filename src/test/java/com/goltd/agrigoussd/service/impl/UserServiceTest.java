@@ -1,6 +1,7 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.UserAccount;
+import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -41,10 +42,10 @@ class UserServiceTest {
     @Test
     void testUpdate() {
         UserAccount userAccount = userService.getUserByMsisdn(msisdn);
-        userAccount.setActive(false);
+        userAccount.setAccountState(AccountState.ACTIVE);
         userService.update(userAccount);
         UserAccount updateUserAccount = userService.getUserByMsisdn(msisdn);
-        Assertions.assertFalse(updateUserAccount.getActive());
+        Assertions.assertEquals(AccountState.ACTIVE,updateUserAccount.getAccountState());
     }
 
     @DisplayName("Test UserService.getUserByMsisdn()")

@@ -8,6 +8,8 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -52,9 +54,13 @@ public class UssdMenu {
     @Column(name = "VISIBILITY", nullable = false, columnDefinition = "varchar(50) default 'UNREG'")
     private Visibility visibility;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID")
+    @ManyToOne()
+    @JoinColumn(name = "PARENT_ID",referencedColumnName = "ID")
     private UssdMenu parentId;
+
+    @OneToMany(mappedBy = "parentId",fetch = FetchType.LAZY)
+    private Set<UssdMenu> children = new HashSet<>();
+
 
     public UssdMenu() {
         // Empty constructor
@@ -146,6 +152,14 @@ public class UssdMenu {
 
     public void setParentId(UssdMenu parentId) {
         this.parentId = parentId;
+    }
+
+    public Set<UssdMenu> getChildren() {
+        return children;
+    }
+
+    public void setChildren(Set<UssdMenu> children) {
+        this.children = children;
     }
 
     @Override
