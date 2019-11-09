@@ -16,7 +16,7 @@ public enum Question {
 
     // Main questions
     MAIN_ENTER_PIN,
-    MAIN_GENERAL,
+    MAIN_SELECT_SERVICE,
     MAIN_RECORD_KEEPING,
     MAIN_MARKETPLACE,
     MAIN_BUY_AIRTIME,

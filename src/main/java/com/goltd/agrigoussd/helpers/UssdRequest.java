@@ -1,5 +1,7 @@
 package com.goltd.agrigoussd.helpers;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 public class UssdRequest {
     private String cellid;
     private String msisdn;
@@ -44,7 +46,7 @@ public class UssdRequest {
     }
 
     public String getInput() {
-        return input;
+        return StringEscapeUtils.escapeHtml(input);
     }
 
     public void setInput(String input) {

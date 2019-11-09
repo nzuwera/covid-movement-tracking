@@ -40,4 +40,9 @@ public class SessionService implements ISessionService {
     public void delete(Session session) {
         sessionRepository.delete(session);
     }
+
+    @Override
+    public Integer getElapsedTime(String msisdn) {
+        return sessionRepository.getElapsedTime(msisdn);
+    }
 }
