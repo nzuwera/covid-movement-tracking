@@ -33,4 +33,15 @@ public class UTKit {
         }
         return res.toString();
     }
+
+    public static <E extends Enum<?>> String iterateOverEnumsByClass(Class<E> c)
+    {
+        StringBuilder messageBuilder = new StringBuilder();
+        for (E o: c.getEnumConstants()) {
+            messageBuilder.append(o.ordinal() + 1);
+            messageBuilder.append(UTKit.BLANK);
+            messageBuilder.append(o);
+        }
+        return messageBuilder.toString();
+    }
 }
