@@ -2,7 +2,6 @@ package com.goltd.agrigoussd.questionnaire.processors;
 
 import com.goltd.agrigoussd.domain.Session;
 import com.goltd.agrigoussd.domain.UssdMenu;
-import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
@@ -29,12 +28,9 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
         switch (menu.getQuestion()) {
 
             case REGISTRATION_SELECT_GENDER:
-                ussdMessage.append(ussdHeader);
-                ussdMessage.append(UTKit.EOL);
                 ussdMessage.append(EnumFormatter.format(ussdHeader, Gender.class));
                 break;
             case REGISTRATION_SELECT_LOCATION_PROVINCE:
-
                 break;
             case REGISTRATION_SELECT_LOCATION_DISTRICT:
                 break;

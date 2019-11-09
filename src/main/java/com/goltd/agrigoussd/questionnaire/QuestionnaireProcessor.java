@@ -21,8 +21,10 @@ public class QuestionnaireProcessor {
         switch (session.getQuestionnaire()) {
             case REGISTRATION:
                 StringBuilder ussdMenu = registrationQuestionnaire.buildMenu(session, request);
+                message = ussdMenu.toString();
                 break;
             default:
+                message = session.getQuestionnaire().toString();
                 break;
         }
         return message;

@@ -8,6 +8,7 @@ import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.enums.Freeflow;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
+import com.goltd.agrigoussd.questionnaire.QuestionnaireProcessor;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
@@ -33,12 +34,14 @@ public class UssdEndpoint {
     private IUserService userService;
     private ISessionService sessionService;
     private IMenuService menuService;
+    private QuestionnaireProcessor processor;
 
     @Autowired
-    public UssdEndpoint(IUserService userService, ISessionService sessionService, IMenuService menuService) {
+    public UssdEndpoint(IUserService userService, ISessionService sessionService, IMenuService menuService, QuestionnaireProcessor processor) {
         this.userService = userService;
         this.sessionService = sessionService;
         this.menuService = menuService;
+        this.processor = processor;
     }
 
     private String ussdResponse;
@@ -112,16 +115,17 @@ public class UssdEndpoint {
                 Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
 
                 // Validate input base on request and currentSession
-                // TODO validate user input
+                // TODO validate user input using QuestionnaireValidator
 
                 // Build next menu
+                ussdResponse = processor.handleQuestionnaire(currentSession,request);
+
+                // Prepare to update session
                 Question previousQuestion = currentSession.getQuestion();
                 UssdMenu previousMenu = menuService.getByQuestion(previousQuestion);
                 List<UssdMenu> nextMenus = menuService.getByParentId(previousMenu);
                 Question nextQuestion = nextMenus.get(0).getQuestion();
                 UssdMenu nextMenu = nextMenus.get(0);
-
-                ussdResponse = nextMenu.getTitleKin();
 
                 // save session
                 currentSession.setPreviousQuestion(previousMenu.getQuestion());
