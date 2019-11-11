@@ -87,25 +87,35 @@ public class UssdEndpoint {
                 } else {
                     // get current session :  previous question and menu
                     Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
-                    Question previousQuestion = currentSession.getQuestion();
-                    UssdMenu previousMenu = menuService.getByQuestion(previousQuestion);
+                    if (Boolean.FALSE.equals(currentSession.getLeaf())) {
+                        Question previousQuestion = currentSession.getQuestion();
+                        UssdMenu previousMenu = menuService.getByQuestion(previousQuestion);
 
-                    // get next menu
-                    List<UssdMenu> nextMenus = menuService.getByParentId(previousMenu);
-                    Question nextQuestion = nextMenus.get(0).getQuestion();
+                        // get next menu
+                        List<UssdMenu> nextMenus = menuService.getByParentId(previousMenu);
+                        Question nextQuestion = nextMenus.get(0).getQuestion();
 
-                    // build next
-                    UssdMenu nextMenu = nextMenus.get(0);
-                    ussdResponse = nextMenu.getTitleKin();
+                        // build next
+                        UssdMenu nextMenu = nextMenus.get(0);
+                        ussdResponse = nextMenu.getTitleKin();
 
-                    // save session
-                    currentSession.setPreviousQuestion(previousMenu.getQuestion());
-                    currentSession.setQuestion(nextQuestion);
-                    currentSession.setLastInput(UTKit.getNewBackwardInput(currentSession.getLastInput()));
-                    currentSession.setTransactionDatetime(new Date());
-                    Session updatedSession = sessionService.update(currentSession);
-                    String saveSession = updatedSession.toString();
-                    logger.info(saveSession);
+                        // save session
+                        currentSession.setPreviousQuestion(previousMenu.getQuestion());
+                        currentSession.setQuestion(nextQuestion);
+                        currentSession.setLastInput(UTKit.getNewBackwardInput(currentSession.getLastInput()));
+                        currentSession.setTransactionDatetime(new Date());
+                        Session updatedSession = sessionService.update(currentSession);
+                        String saveSession = updatedSession.toString();
+                        logger.info(saveSession);
+                    } else {
+                        sessionService.delete(sessionService.getByMsisdn(request.getMsisdn()));
+                        sessionService.create(session);
+
+                        // get the current session
+                        currentSession = sessionService.getByMsisdn(request.getMsisdn());
+                        UssdMenu currentMenu = menuService.getByQuestion(currentSession.getQuestion());
+                        ussdResponse = currentMenu.getTitleKin();
+                    }
                 }
 
 
@@ -114,28 +124,8 @@ public class UssdEndpoint {
                 // get current session :  previous question and menu
                 Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
 
-                // Validate input base on request and currentSession
-                // TODO validate user input using QuestionnaireValidator
-
                 // Build next menu
-                ussdResponse = processor.handleQuestionnaire(currentSession,request);
-
-                // Prepare to update session
-                Question previousQuestion = currentSession.getQuestion();
-                UssdMenu previousMenu = menuService.getByQuestion(previousQuestion);
-                List<UssdMenu> nextMenus = menuService.getByParentId(previousMenu);
-                Question nextQuestion = nextMenus.get(0).getQuestion();
-                UssdMenu nextMenu = nextMenus.get(0);
-
-                // save session
-                currentSession.setPreviousQuestion(previousMenu.getQuestion());
-                currentSession.setQuestion(nextQuestion);
-                currentSession.setLastInput(currentSession.getLastInput() + UTKit.JOINER + request.getInput());
-                currentSession.setTransactionDatetime(new Date());
-                currentSession.setLeaf(nextMenu.getLeaf());
-                Session updatedSession = sessionService.update(currentSession);
-                String saveSession = updatedSession.toString();
-                logger.info(saveSession);
+                ussdResponse = processor.handleQuestionnaire(currentSession, request);
 
                 if (Boolean.FALSE.equals(currentSession.getLeaf())) {
                     httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, Freeflow.FC.name());

@@ -23,6 +23,8 @@ public class QuestionnaireProcessor {
                 StringBuilder ussdMenu = registrationQuestionnaire.buildMenu(session, request);
                 message = ussdMenu.toString();
                 break;
+            case MAIN:
+                break;
             default:
                 message = session.getQuestionnaire().toString();
                 break;

@@ -2,6 +2,7 @@ package com.goltd.agrigoussd.helpers.enums;
 
 public enum Question {
     // Registration questions
+    REGISTRATION_START,
     REGISTRATION_ENTER_FULL_NAME,
     REGISTRATION_ENTER_AGE,
     REGISTRATION_SELECT_GENDER,

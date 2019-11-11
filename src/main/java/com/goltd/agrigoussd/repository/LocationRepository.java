@@ -29,5 +29,7 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
     List<Location> getVillages(@Param("cellCode") String cellCode);
 
     @Query(value = "select l from Location l where l.code = :locationCode and l.type = :locationType")
-    List<Location> getLocationsByCodeAndType(@Param("locationCode") String locationCode, @Param("locationType") LocationType locationType);
+    List<Location> findLocationsByCodeLikeAndType(@Param("locationCode") String locationCode, @Param("locationType") LocationType locationType);
+
+
 }

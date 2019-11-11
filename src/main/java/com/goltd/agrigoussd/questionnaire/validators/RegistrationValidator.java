@@ -1,39 +1,70 @@
 package com.goltd.agrigoussd.questionnaire.validators;
 
+import com.goltd.agrigoussd.domain.Location;
+import com.goltd.agrigoussd.helpers.enums.Gender;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class RegistrationValidator {
-
-    public static String validateFullname(String fullname) {
-        return null;
+    private RegistrationValidator() {
+        //
     }
 
-    public static String validateAge(String fullname) {
-        return null;
+    private static final String NUMBERS = "[^0-9]";
+    private static final String LETTERS = "[^A-Za-z ]";
+
+    public static Boolean validateFullName(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            return false;
+        }
+        Pattern p = Pattern.compile(LETTERS);
+        Matcher m = p.matcher(fullName);
+        return !m.find();
     }
 
-    public static String validateProvince(int provinceId) {
-        return null;
+    public static Boolean validateAge(String age) {
+        if (age == null || age.trim().isEmpty() || Integer.parseInt(age) <= 18) {
+            return false;
+        }
+        Pattern p = Pattern.compile(NUMBERS);
+        Matcher m = p.matcher(age);
+        return !m.find();
     }
 
-    public static String validateDistrict(int provinceId, int districtId) {
-        return null;
+    public static Boolean validateLocations(String input, List<Location> locations) {
+        if (validaNumber(input)) {
+            int selectedInput = Integer.parseInt(input);
+            int locationSize = locations.size();
+            return selectedInput <= locationSize;
+        }
+        return false;
     }
 
-    public static String validateSector(int districtId, int sectorId) {
-        return null;
+    public static Boolean validateGender(String string) {
+        int enumLength = Gender.values().length;
+        return Integer.parseInt(string) <= enumLength;
+
     }
 
-    public static String validateCell(int sectorId, int cellId) {
-        return null;
+    public static Boolean validatePIN(String pin) {
+        if (pin == null || pin.trim().isEmpty() || pin.length() != 5) {
+            return false;
+        }
+        Pattern p = Pattern.compile(NUMBERS);
+        Matcher m = p.matcher(pin);
+        return !m.find();
     }
 
-    public static String validateVillage(int cellId, int villageId) {
-        return null;
-    }
-
-    public static Boolean validatePIN(String pin, String verifyPin){
-        return null;
+    public static Boolean validaNumber(String number) {
+        if (number == null || number.trim().isEmpty()) {
+            return false;
+        }
+        Pattern p = Pattern.compile(NUMBERS);
+        Matcher m = p.matcher(number);
+        return !m.find();
     }
 }
