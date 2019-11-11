@@ -129,6 +129,7 @@ public class UserAccount {
 
     @Override
     public String toString() {
+        // TODO remove pin from userAccount.toString() method
         return "UserAccount{" +
                 "id=" + id +
                 ", msisdn='" + msisdn + '\'' +

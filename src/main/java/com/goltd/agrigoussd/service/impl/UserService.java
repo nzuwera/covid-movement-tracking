@@ -67,4 +67,17 @@ public class UserService implements IUserService {
     public void delete(UserAccount userAccount) {
         userRepository.delete(userAccount);
     }
+
+    /**
+     * Validate uses pin
+     *
+     * @param msisdn msisdn
+     * @param pin    user pin
+     * @return true | false
+     */
+    @Override
+    public Boolean isValidPin(String msisdn, String pin) {
+        UserAccount userAccount = userRepository.findByMsisdn(msisdn);
+        return userAccount.getPin().equals(pin);
+    }
 }

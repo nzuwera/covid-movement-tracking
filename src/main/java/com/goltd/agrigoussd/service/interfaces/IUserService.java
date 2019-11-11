@@ -9,4 +9,5 @@ public interface IUserService {
     void delete(UserAccount userAccount);
     UserAccount getUserByMsisdn(String msisdn);
     Boolean exists(String msisdn);
+    Boolean isValidPin(String msisdn, String pin);
 }

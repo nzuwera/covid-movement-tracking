@@ -1,7 +1,10 @@
 package com.goltd.agrigoussd.helpers;
 
+import com.goltd.agrigoussd.domain.UssdMenu;
+
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,6 +56,17 @@ public class UTKit {
         locationCodes.put("cellCode", cellCode);
         locationCodes.put("villageCode", villageCode);
         return locationCodes;
+    }
+
+    public static String listMenus(List<UssdMenu> menus) {
+        StringBuilder menuString = new StringBuilder();
+        for (int i = 0; i < menus.size(); i++) {
+            menuString.append(i + 1);
+            menuString.append(BLANK);
+            menuString.append(menus.get(i).getTitleKin());
+            menuString.append(EOL);
+        }
+        return menuString.toString();
     }
 
 }
