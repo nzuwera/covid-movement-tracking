@@ -45,6 +45,9 @@ public class UserAccount {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date expireDate;
 
+    @Column(name = "VILLAGE_CODE",nullable =false, columnDefinition = "varchar(10) not null")
+    private String villageCode;
+
     @Column(name = "PIN")
     private String pin;
 
@@ -108,6 +111,14 @@ public class UserAccount {
         this.expireDate = expireDate;
     }
 
+    public String getVillageCode() {
+        return villageCode;
+    }
+
+    public void setVillageCode(String villageCode) {
+        this.villageCode = villageCode;
+    }
+
     public String getPin() {
         return pin;
     }
@@ -126,7 +137,7 @@ public class UserAccount {
                 ", gender=" + gender +
                 ", accountState=" + accountState +
                 ", expireDate=" + expireDate +
-                ", pin='" + pin + '\'' +
+                ", villageCode='" + villageCode + '\'' +
                 '}';
     }
 }

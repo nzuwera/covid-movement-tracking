@@ -51,6 +51,9 @@ public class Session {
     @Column(name = "LOGGED_IN", nullable = false, columnDefinition = "BOOLEAN default FALSE")
     private Boolean loggedIn;
 
+    @Column(name = "IS_LEAF", nullable = false, columnDefinition = "BOOLEAN default FALSE")
+    private Boolean isLeaf;
+
     public Session() {
         // Default Constructor
     }
@@ -127,6 +130,15 @@ public class Session {
         this.loggedIn = loggedIn;
     }
 
+
+    public Boolean getLeaf() {
+        return isLeaf;
+    }
+
+    public void setLeaf(Boolean leaf) {
+        isLeaf = leaf;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
@@ -139,6 +151,8 @@ public class Session {
                 ", startService=" + startService +
                 ", question=" + question +
                 ", loggedIn=" + loggedIn +
+                ", isLeaf=" + isLeaf +
                 '}';
     }
+
 }
