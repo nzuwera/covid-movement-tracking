@@ -6,10 +6,6 @@ import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
-import static com.goltd.agrigoussd.helpers.enums.AccountState.PENDING_SUBSCRIPTION;
-
 @Service
 public class UserService implements IUserService {
 
@@ -21,19 +17,13 @@ public class UserService implements IUserService {
     }
 
     /**
-     * Create new user
+     * Create new userAccount
      *
-     * @param msisdn phone number
+     * @param userAccount userAccount object
      */
     @Override
-    public UserAccount create(String msisdn) {
-        UserAccount newUserAccount = new UserAccount();
-        newUserAccount.setId(UUID.randomUUID());
-        newUserAccount.setMsisdn(msisdn);
-        newUserAccount.setFullname(msisdn);
-        newUserAccount.setPin(msisdn);
-        newUserAccount.setAccountState(PENDING_SUBSCRIPTION);
-        return userRepository.save(newUserAccount);
+    public UserAccount create(UserAccount userAccount) {
+        return userRepository.save(userAccount);
     }
 
     /**
@@ -76,5 +66,18 @@ public class UserService implements IUserService {
     @Override
     public void delete(UserAccount userAccount) {
         userRepository.delete(userAccount);
+    }
+
+    /**
+     * Validate uses pin
+     *
+     * @param msisdn msisdn
+     * @param pin    user pin
+     * @return true | false
+     */
+    @Override
+    public Boolean isValidPin(String msisdn, String pin) {
+        UserAccount userAccount = userRepository.findByMsisdn(msisdn);
+        return userAccount.getPin().equals(pin);
     }
 }

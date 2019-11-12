@@ -1,13 +1,16 @@
 package com.goltd.agrigoussd.domain;
 
-import com.goltd.agrigoussd.helpers.enums.Visibility;
-import com.goltd.agrigoussd.helpers.enums.QuestionType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.helpers.enums.QuestionType;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
+import com.goltd.agrigoussd.helpers.enums.Visibility;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -49,12 +52,18 @@ public class UssdMenu {
     @Column(name = "PRIORITY")
     private int priority;
 
-    @Column(name = "VISIBILITY", nullable = false, columnDefinition = "varchar(50) default 'UNREG'")
+    @Column(name = "VISIBILITY", nullable = false, columnDefinition = "varchar(50) default 'UNREGISTERED'")
+    @Enumerated(EnumType.STRING)
     private Visibility visibility;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID")
+    @ManyToOne()
+    @JoinColumn(name = "PARENT_ID",referencedColumnName = "ID")
     private UssdMenu parentId;
+
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<UssdMenu> children = new HashSet<>();
+
 
     public UssdMenu() {
         // Empty constructor
@@ -148,13 +157,21 @@ public class UssdMenu {
         this.parentId = parentId;
     }
 
+    public Set<UssdMenu> getChildren() {
+        return children;
+    }
+
+    public void setChildren(Set<UssdMenu> children) {
+        this.children = children;
+    }
+
     @Override
     public String toString() {
         return "UssdMenu{" +
                 "id=" + id +
                 ", titleEng='" + titleEng + '\'' +
                 ", titleKin='" + titleKin + '\'' +
-                ", questionnaire=" + questionnaire +
+                ", registration=" + questionnaire +
                 ", question=" + question +
                 ", isLeaf=" + isLeaf +
                 ", questionType=" + questionType +

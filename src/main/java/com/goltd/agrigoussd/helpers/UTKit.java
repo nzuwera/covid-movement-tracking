@@ -1,6 +1,11 @@
 package com.goltd.agrigoussd.helpers;
 
+import com.goltd.agrigoussd.domain.UssdMenu;
+
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * USSD Tool Kit helper class
@@ -11,7 +16,7 @@ public class UTKit {
     public static final String EMPTY = "";
     public static final String BLANK = " ";
     public static final String FREE_FLOW_HEADER = "Freeflow";
-    public static final String LINE = "---";
+    public static final String PIPE = "|";
 
     private UTKit() {
         // Empty private constructor
@@ -33,4 +38,35 @@ public class UTKit {
         }
         return res.toString();
     }
+
+    public static String getLastInput(String input) {
+        String[] lastInputs = input.split(JOINER);
+        return lastInputs[lastInputs.length - 1];
+    }
+
+    public static Map<String, String> getLocationCodes(String villageCode) {
+        Map<String, String> locationCodes = new HashMap<>();
+        String provinceCode = villageCode.substring(0, 2);
+        String districtCode = villageCode.substring(0, 4);
+        String sectorCode = villageCode.substring(0, 6);
+        String cellCode = villageCode.substring(0, 8);
+        locationCodes.put("provinceCode", provinceCode);
+        locationCodes.put("districtCode", districtCode);
+        locationCodes.put("sectorCode", sectorCode);
+        locationCodes.put("cellCode", cellCode);
+        locationCodes.put("villageCode", villageCode);
+        return locationCodes;
+    }
+
+    public static String listMenus(List<UssdMenu> menus) {
+        StringBuilder menuString = new StringBuilder();
+        for (int i = 0; i < menus.size(); i++) {
+            menuString.append(i + 1);
+            menuString.append(BLANK);
+            menuString.append(menus.get(i).getTitleKin());
+            menuString.append(EOL);
+        }
+        return menuString.toString();
+    }
+
 }

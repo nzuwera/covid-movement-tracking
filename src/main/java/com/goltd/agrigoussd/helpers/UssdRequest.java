@@ -1,6 +1,6 @@
 package com.goltd.agrigoussd.helpers;
 
-import java.util.Objects;
+import org.apache.commons.lang.StringEscapeUtils;
 
 public class UssdRequest {
     private String cellid;
@@ -10,14 +10,7 @@ public class UssdRequest {
     private String input;
 
     public UssdRequest() {
-    }
-
-    public UssdRequest(String cellid, String msisdn, String sessionid, String newRequest, String input) {
-        this.cellid = cellid;
-        this.msisdn = msisdn;
-        this.sessionid = sessionid;
-        this.newRequest = newRequest;
-        this.input = input;
+        //
     }
 
     public String getCellid() {
@@ -53,7 +46,7 @@ public class UssdRequest {
     }
 
     public String getInput() {
-        return input;
+        return StringEscapeUtils.escapeHtml(input);
     }
 
     public void setInput(String input) {
@@ -61,26 +54,9 @@ public class UssdRequest {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UssdRequest that = (UssdRequest) o;
-        return Objects.equals(cellid, that.cellid) &&
-                Objects.equals(msisdn, that.msisdn) &&
-                Objects.equals(sessionid, that.sessionid) &&
-                Objects.equals(newRequest, that.newRequest) &&
-                Objects.equals(input, that.input);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(cellid, msisdn, sessionid, newRequest, input);
-    }
-
-    @Override
     public String toString() {
         return "UssdRequest{" +
-                "previousState='" + cellid + '\'' +
+                "cellid='" + cellid + '\'' +
                 ", msisdn='" + msisdn + '\'' +
                 ", sessionid='" + sessionid + '\'' +
                 ", newRequest='" + newRequest + '\'' +
