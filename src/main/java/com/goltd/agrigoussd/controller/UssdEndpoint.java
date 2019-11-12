@@ -76,7 +76,7 @@ public class UssdEndpoint {
             if (request.getNewRequest().equals("1")) {
 
                 // is Expired delete and initialize else resume
-                if (sessionService.getElapsedTime(request.getMsisdn()) > 5) {
+                if (UTKit.elapsedMinutes(session.getTransactionDatetime()) > 5) {
                     sessionService.delete(sessionService.getByMsisdn(request.getMsisdn()));
                     sessionService.create(session);
 

@@ -6,7 +6,7 @@ import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service(value = "userService")
 public class UserService implements IUserService {
 
     private UserRepository userRepository;
@@ -22,8 +22,8 @@ public class UserService implements IUserService {
      * @param userAccount userAccount object
      */
     @Override
-    public UserAccount create(UserAccount userAccount) {
-        return userRepository.save(userAccount);
+    public void create(UserAccount userAccount) {
+        userRepository.save(userAccount);
     }
 
     /**
