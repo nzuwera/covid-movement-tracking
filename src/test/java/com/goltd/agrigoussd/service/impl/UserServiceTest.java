@@ -30,7 +30,7 @@ class UserServiceTest {
 
     @BeforeEach
     void init() {
-        msisdn = "250788313531";
+        msisdn = "250788313551";
         fullName = "Nzuwera Gilbert";
         villageCode = "0102010605";
         age = 35;
@@ -59,7 +59,7 @@ class UserServiceTest {
     @Test
     void testCreate() {
         UserAccount createdAccount = userService.getUserByMsisdn(msisdn);
-        Assertions.assertEquals(createdAccount.getMsisdn(), msisdn);
+        Assertions.assertEquals(msisdn, createdAccount.getMsisdn());
     }
 
     @DisplayName("Test UserService.update()")
