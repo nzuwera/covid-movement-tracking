@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+import static com.goltd.agrigoussd.helpers.enums.AccountState.PENDING_SUBSCRIPTION;
+
 @Service
 public class UserService implements IUserService {
 
@@ -30,7 +32,7 @@ public class UserService implements IUserService {
         newUserAccount.setMsisdn(msisdn);
         newUserAccount.setFullname(msisdn);
         newUserAccount.setPin(msisdn);
-        newUserAccount.setActive(false);
+        newUserAccount.setAccountState(PENDING_SUBSCRIPTION);
         return userRepository.save(newUserAccount);
     }
 
