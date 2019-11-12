@@ -1,6 +1,7 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.UserAccount;
+import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -8,20 +9,42 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Date;
+import java.util.UUID;
+
+import static com.goltd.agrigoussd.helpers.enums.AccountState.PENDING_SUBSCRIPTION;
 import static com.goltd.agrigoussd.helpers.enums.AccountState.SUSPENDED;
 
 @SpringBootTest
 class UserServiceTest {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceTest.class.getName());
 
-    String msisdn = "250788313531";
+    private String msisdn;
+    private String fullName;
+    private String villageCode;
+    private int age;
+    private String pin;
 
     @Autowired
     private IUserService userService;
 
     @BeforeEach
     void init() {
-        UserAccount userAccount = userService.create(msisdn);
+        msisdn = "250788313531";
+        fullName = "Nzuwera Gilbert";
+        villageCode = "0102010605";
+        age = 35;
+        pin = "12345";
+        UserAccount userAccount = new UserAccount();
+        userAccount.setExpireDate(new Date());
+        userAccount.setGender(Gender.MALE);
+        userAccount.setAge(age);
+        userAccount.setFullname(fullName);
+        userAccount.setVillageCode(villageCode);
+        userAccount.setPin(pin);
+        userAccount.setAccountState(PENDING_SUBSCRIPTION);
+        userAccount.setId(UUID.randomUUID());
+        userService.create(userAccount);
         logger.info(userAccount.getMsisdn());
 
     }
