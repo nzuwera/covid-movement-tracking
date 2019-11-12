@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static com.goltd.agrigoussd.helpers.enums.AccountState.SUSPENDED;
+
 @SpringBootTest
 class UserServiceTest {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceTest.class.getName());
@@ -41,17 +43,17 @@ class UserServiceTest {
     @Test
     void testUpdate() {
         UserAccount userAccount = userService.getUserByMsisdn(msisdn);
-        userAccount.setActive(false);
+        userAccount.setAccountState(SUSPENDED);
         userService.update(userAccount);
         UserAccount updateUserAccount = userService.getUserByMsisdn(msisdn);
-        Assertions.assertFalse(updateUserAccount.getActive());
+        Assertions.assertEquals(SUSPENDED, updateUserAccount.getAccountState());
     }
 
     @DisplayName("Test UserService.getUserByMsisdn()")
     @Test
     void testGetUserByMsisdn() {
         UserAccount userAccount = userService.getUserByMsisdn(msisdn);
-        Assertions.assertEquals(msisdn,userAccount.getFullname());
+        Assertions.assertEquals(msisdn, userAccount.getFullname());
     }
 
     @DisplayName("Test UserService.exists()")
