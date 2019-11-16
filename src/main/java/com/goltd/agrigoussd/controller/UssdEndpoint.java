@@ -141,8 +141,6 @@ public class UssdEndpoint {
             UssdMenu currentMenu = menuService.getByQuestion(currentSession.getQuestion());
             ussdResponse = currentMenu.getTitleKin();
         }
-
-        logger.info(ussdResponse);
         return ussdResponse;
     }
 }

@@ -5,6 +5,7 @@ import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.questionnaire.validators.RegistrationValidator;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
@@ -44,7 +45,7 @@ public class MainQuestionnaire implements IAbstractQuestionnaireProcessor {
         UssdMenu nextMenu = nextMenus.get(0);
         String ussdHeader = nextMenu.getTitleKin();
         StringBuilder ussdMessage = new StringBuilder();
-        switch (session.getQuestion()) {
+        switch (previousQuestion) {
             case MAIN_ENTER_PIN:
 
                 if (userService.isValidPin(request.getMsisdn(), request.getInput())) {
@@ -66,7 +67,19 @@ public class MainQuestionnaire implements IAbstractQuestionnaireProcessor {
                 break;
 
             case MAIN_SELECT_SERVICE:
-                ussdMessage.append(nextMenu.getTitleKin());
+                // 1. Get services menus where MAIN_SELECT_SERVICE is parent
+                List<UssdMenu> previousMenus = menuService.getChildrenByQuestion(previousQuestion);
+                if(RegistrationValidator.validateMenus(request.getInput(),previousMenus)){
+                    nextMenu = previousMenus.get(Integer.parseInt(request.getInput()));
+
+                    ussdMessage.append(nextMenu.getTitleKin());
+                }
+
+                // logger.info("Children by ParentQuestion {}",services);
+                // 2. Check if input is valid number and in services menus if not show services
+                // 3. Get selected service for next question
+                // 4. Get next selected menu
+                // 5.
                 break;
             case MAIN_ASSOCIATIONS:
                 ussdMessage.append(nextMenu.getTitleKin());

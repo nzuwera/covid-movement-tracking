@@ -1,6 +1,7 @@
 package com.goltd.agrigoussd.questionnaire.validators;
 
 import com.goltd.agrigoussd.domain.Location;
+import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 import org.springframework.stereotype.Service;
 
@@ -66,5 +67,14 @@ public class RegistrationValidator {
         Pattern p = Pattern.compile(NUMBERS);
         Matcher m = p.matcher(number);
         return !m.find();
+    }
+
+    public static boolean validateMenus(String input, List<UssdMenu> previousMenus) {
+        if (validaNumber(input)) {
+            int selectedInput = Integer.parseInt(input);
+            int previousMenusSize = previousMenus.size();
+            return selectedInput <= previousMenusSize;
+        }
+        return false;
     }
 }
