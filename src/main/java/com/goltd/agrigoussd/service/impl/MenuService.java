@@ -37,6 +37,6 @@ public class MenuService implements IMenuService {
 
     @Override
     public List<UssdMenu> getChildrenByQuestion(Question question) {
-        return menuRepository.findUssdMenusByParentIdQuestion(question);
+        return menuRepository.findUssdMenusByParentIdQuestionOrderByPriorityAsc(question);
     }
 }

@@ -17,5 +17,5 @@ public interface MenuRepository extends JpaRepository<UssdMenu, UUID> {
 
     List<UssdMenu> findByQuestionnaire(Questionnaire questionnaire);
 
-    List<UssdMenu> findUssdMenusByParentIdQuestion(Question question);
+    List<UssdMenu> findUssdMenusByParentIdQuestionOrderByPriorityAsc(Question question);
 }
