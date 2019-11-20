@@ -16,7 +16,7 @@ public class UTKit {
     public static final String EMPTY = "";
     public static final String BLANK = " ";
     public static final String FREE_FLOW_HEADER = "Freeflow";
-    public static final String PIPE = "|";
+    public static final String DOT = ".";
 
     private UTKit() {
         // Empty private constructor
