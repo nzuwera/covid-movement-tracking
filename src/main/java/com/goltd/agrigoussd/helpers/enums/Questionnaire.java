@@ -4,5 +4,11 @@ public enum Questionnaire {
     MAIN,
     REGISTRATION,
     ASSOCIATION,
-    LAND
+    LAND,
+    MARKETPLACE,
+    ACTIVITY,
+    REPORT,
+    ACCOUNT,
+    AIRTIME,
+    HELP
 }
