@@ -2,10 +2,10 @@ package com.goltd.agrigoussd.questionnaire.processors;
 
 import com.goltd.agrigoussd.domain.Session;
 import com.goltd.agrigoussd.domain.UssdMenu;
-import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.enums.Question;
-import com.goltd.agrigoussd.questionnaire.validators.RegistrationValidator;
+import com.goltd.agrigoussd.helpers.formatter.ListFormatter;
+import com.goltd.agrigoussd.questionnaire.validators.QuestionValidator;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.List;
 
 import static com.goltd.agrigoussd.helpers.UTKit.JOINER;
-import static com.goltd.agrigoussd.helpers.enums.Question.MAIN_SELECT_SERVICE;
 
 @Service
 public class MainQuestionnaire implements IAbstractQuestionnaireProcessor {
@@ -39,6 +38,7 @@ public class MainQuestionnaire implements IAbstractQuestionnaireProcessor {
 
     @Override
     public StringBuilder buildMenu(Session session, UssdRequest request) {
+        List<UssdMenu> previousMenus;
         Question previousQuestion = session.getQuestion();
         UssdMenu previousMenu = menuService.getByQuestion(previousQuestion);
         List<UssdMenu> nextMenus = menuService.getByParentId(previousMenu);
@@ -47,47 +47,37 @@ public class MainQuestionnaire implements IAbstractQuestionnaireProcessor {
         StringBuilder ussdMessage = new StringBuilder();
         switch (previousQuestion) {
             case MAIN_ENTER_PIN:
-
+                previousMenus = menuService.getChildrenByQuestion(previousQuestion);
                 if (userService.isValidPin(request.getMsisdn(), request.getInput())) {
-                    String services = UTKit.listMenus(menuService.getByParentId(nextMenu));
-                    ussdMessage.append(ussdHeader);
-                    ussdMessage.append(UTKit.EOL);
-                    ussdMessage.append(services);
-
-                    // save session
-                    session.setPreviousQuestion(previousMenu.getQuestion());
-                    session.setQuestion(MAIN_SELECT_SERVICE);
-                    session.setTransactionDatetime(new Date());
-                    session.setLeaf(nextMenu.getLeaf());
-                    session.setLastInput(session.getLastInput() + JOINER + request.getInput());
-                    sessionService.update(session);
+                    logger.info("MAIN_ENTER_PIN {}", previousMenus);
+                    ussdMessage = ListFormatter.formatListMenus(previousMenus);
                 } else {
                     ussdMessage.append(previousMenu.getTitleKin());
                 }
                 break;
-
-            case MAIN_SELECT_SERVICE:
-                // 1. Get services menus where MAIN_SELECT_SERVICE is parent
-                List<UssdMenu> previousMenus = menuService.getChildrenByQuestion(previousQuestion);
-                if(RegistrationValidator.validateMenus(request.getInput(),previousMenus)){
-                    nextMenu = previousMenus.get(Integer.parseInt(request.getInput()));
-
-                    ussdMessage.append(nextMenu.getTitleKin());
-                }
-
-                // logger.info("Children by ParentQuestion {}",services);
-                // 2. Check if input is valid number and in services menus if not show services
-                // 3. Get selected service for next question
-                // 4. Get next selected menu
-                // 5.
-                break;
             case MAIN_ASSOCIATIONS:
-                ussdMessage.append(nextMenu.getTitleKin());
+                previousMenus = menuService.getByParentId(previousMenu);
+                logger.info("{} : {}", previousMenu, previousMenus);
+                if (QuestionValidator.validateMenus(request.getInput(), previousMenus)) {
+                    if (previousMenus.size() > 1) {
+                        nextMenu = previousMenus.get(Integer.parseInt(request.getInput()) - 1);
+                    } else {
+                        nextMenu = previousMenus.get(0);
+                    }
+                    ussdMessage = ListFormatter.formatListMenus(menuService.getByParentId(nextMenu));
+                } else {
+                    previousMenu = menuService.getByQuestion(previousQuestion);
+                    ussdMessage = ListFormatter.formatListMenus(menuService.getByParentId(previousMenu));
+                }
                 break;
             case MAIN_LAND_MANAGEMENT:
+                previousMenus = menuService.getByParentId(previousMenu);
+                logger.info("{} : {}", previousMenu, previousMenus);
                 ussdMessage.append(nextMenu.getTitleKin());
                 break;
             case MAIN_ACTIVITY_RECORDING:
+                previousMenus = menuService.getByParentId(previousMenu);
+                logger.info("{} : {}", previousMenu, previousMenus);
                 ussdMessage.append(nextMenu.getTitleKin());
                 break;
             case MAIN_MINI_REPORT:
@@ -109,6 +99,15 @@ public class MainQuestionnaire implements IAbstractQuestionnaireProcessor {
                 ussdMessage.append(ussdHeader);
                 break;
         }
+
+
+        session.setQuestionnaire(nextMenu.getQuestionnaire());
+        session.setPreviousQuestion(previousMenu.getQuestion());
+        session.setQuestion(nextMenu.getQuestion());
+        session.setTransactionDatetime(new Date());
+        session.setLeaf(nextMenu.getLeaf());
+        session.setLastInput(session.getLastInput() + JOINER + request.getInput());
+        sessionService.update(session);
         logger.info("MainQuestionnaire : {}", ussdMessage);
         return ussdMessage;
     }

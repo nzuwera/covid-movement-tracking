@@ -51,6 +51,11 @@ public class QuestionValidator {
 
     }
 
+    public static <E extends Enum<E>> Boolean validateEnum(String string, Class<E> enumObject) {
+        int enumLength = enumObject.getEnumConstants().length;
+        return Integer.parseInt(string) <= enumLength;
+    }
+
     public static Boolean validatePIN(String pin) {
         if (pin == null || pin.trim().isEmpty() || pin.length() != 5) {
             return false;

@@ -10,7 +10,7 @@ import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
 import com.goltd.agrigoussd.helpers.formatter.ListFormatter;
-import com.goltd.agrigoussd.questionnaire.validators.RegistrationValidator;
+import com.goltd.agrigoussd.questionnaire.validators.QuestionValidator;
 import com.goltd.agrigoussd.service.interfaces.ILocationService;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
@@ -57,7 +57,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
         StringBuilder ussdMessage = new StringBuilder();
         switch (session.getQuestion()) {
             case REGISTRATION_ENTER_FULL_NAME:
-                if (RegistrationValidator.validateFullName(request.getInput())) {
+                if (QuestionValidator.validateFullName(request.getInput())) {
                     // Display enter age
                     session.setLastInput(session.getLastInput() + JOINER + request.getInput());
                     ussdMessage.append(nextMenus.get(0).getTitleKin());
@@ -74,7 +74,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 break;
 
             case REGISTRATION_ENTER_AGE:
-                if (RegistrationValidator.validateAge(request.getInput())) {
+                if (QuestionValidator.validateAge(request.getInput())) {
                     // Display gender
                     session.setLastInput(session.getLastInput() + JOINER + request.getInput());
                     ussdMessage.append(EnumFormatter.format(nextMenus.get(0).getTitleKin(), Gender.class));
@@ -92,7 +92,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 break;
 
             case REGISTRATION_SELECT_GENDER:
-                if (RegistrationValidator.validateGender(request.getInput())) {
+                if (QuestionValidator.validateGender(request.getInput())) {
                     // Display provinces
                     session.setLastInput(session.getLastInput() + JOINER + request.getInput());
                     ussdMessage = ListFormatter.formatLocations(ussdHeader, locationService.getProvinces());
@@ -111,7 +111,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
             case REGISTRATION_SELECT_LOCATION_PROVINCE:
                 // Get selected province
                 List<Location> prevProvinces = locationService.getProvinces();
-                if (RegistrationValidator.validateLocations(request.getInput(), prevProvinces)) {
+                if (QuestionValidator.validateLocations(request.getInput(), prevProvinces)) {
                     String provinceCode = prevProvinces.get(Integer.parseInt(request.getInput()) - 1).getCode();
                     session.setLastInput(session.getLastInput() + JOINER + provinceCode);
                     // Display districts
@@ -131,7 +131,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
             case REGISTRATION_SELECT_LOCATION_DISTRICT:
                 // Get selected district
                 List<Location> districts = locationService.getDistricts(getLastInput(session.getLastInput()));
-                if (RegistrationValidator.validateLocations(request.getInput(), districts)) {
+                if (QuestionValidator.validateLocations(request.getInput(), districts)) {
                     String districtCode = districts.get(Integer.parseInt(request.getInput()) - 1).getCode();
                     session.setLastInput(session.getLastInput() + JOINER + districtCode);
                     // Display sectors
@@ -152,7 +152,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 // Get selected sector
                 List<Location> sectors = locationService.getSectors(getLastInput(session.getLastInput()));
 
-                if (RegistrationValidator.validateLocations(request.getInput(), sectors)) {
+                if (QuestionValidator.validateLocations(request.getInput(), sectors)) {
                     String sectorCode = sectors.get(Integer.parseInt(request.getInput()) - 1).getCode();
                     session.setLastInput(session.getLastInput() + JOINER + sectorCode);
                     // Display cells
@@ -173,7 +173,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 // Get selected cell
                 List<Location> cells = locationService.getCells(getLastInput(session.getLastInput()));
 
-                if (RegistrationValidator.validateLocations(request.getInput(), cells)) {
+                if (QuestionValidator.validateLocations(request.getInput(), cells)) {
                     String cellCode = cells.get(Integer.parseInt(request.getInput()) - 1).getCode();
                     session.setLastInput(session.getLastInput() + JOINER + cellCode);
                     // Display village
@@ -194,7 +194,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 // Get selected Village
                 List<Location> villages = locationService.getVillages(getLastInput(session.getLastInput()));
 
-                if (RegistrationValidator.validateLocations(request.getInput(), villages)) {
+                if (QuestionValidator.validateLocations(request.getInput(), villages)) {
                     String villageCode = villages.get(Integer.parseInt(request.getInput()) - 1).getCode();
                     session.setLastInput(session.getLastInput() + JOINER + villageCode);
                     // Display enter pin
@@ -213,7 +213,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 break;
             case REGISTRATION_ENTER_PIN:
                 // Display verify pin
-                if (RegistrationValidator.validatePIN(request.getInput())) {
+                if (QuestionValidator.validatePIN(request.getInput())) {
                     ussdMessage.append(nextMenu.getTitleKin());
                     session.setLastInput(session.getLastInput() + JOINER + request.getInput());
                     // save session
@@ -228,7 +228,7 @@ public class RegistrationQuestionnaire implements IAbstractQuestionnaireProcesso
                 break;
             case REGISTRATION_VERIFY_PIN:
                 // End Registration
-                if (RegistrationValidator.validatePIN(request.getInput())) {
+                if (QuestionValidator.validatePIN(request.getInput())) {
                     String pin = getLastInput(session.getLastInput());
                     if (pin.equals(request.getInput())) {
 
