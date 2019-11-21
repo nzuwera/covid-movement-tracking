@@ -10,8 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class RegistrationValidator {
-    private RegistrationValidator() {
+public class QuestionValidator {
+    private QuestionValidator() {
         //
     }
 
