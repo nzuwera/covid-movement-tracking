@@ -5,9 +5,7 @@ import com.goltd.agrigoussd.domain.UssdMenu;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * USSD Tool Kit helper class
@@ -45,20 +43,6 @@ public class UTKit {
     public static String getLastInput(String input) {
         String[] lastInputs = input.split(JOINER);
         return lastInputs[lastInputs.length - 1];
-    }
-
-    public static Map<String, String> getLocationCodes(String villageCode) {
-        Map<String, String> locationCodes = new HashMap<>();
-        String provinceCode = villageCode.substring(0, 2);
-        String districtCode = villageCode.substring(0, 4);
-        String sectorCode = villageCode.substring(0, 6);
-        String cellCode = villageCode.substring(0, 8);
-        locationCodes.put("provinceCode", provinceCode);
-        locationCodes.put("districtCode", districtCode);
-        locationCodes.put("sectorCode", sectorCode);
-        locationCodes.put("cellCode", cellCode);
-        locationCodes.put("villageCode", villageCode);
-        return locationCodes;
     }
 
     public static String listMenus(List<UssdMenu> menus) {
