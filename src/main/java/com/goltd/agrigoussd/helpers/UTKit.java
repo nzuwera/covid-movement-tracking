@@ -2,6 +2,8 @@ package com.goltd.agrigoussd.helpers;
 
 import com.goltd.agrigoussd.domain.UssdMenu;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.Map;
  * USSD Tool Kit helper class
  */
 public class UTKit {
+
     public static final String EOL = "\n";
     public static final String JOINER = ":";
     public static final String EMPTY = "";
@@ -67,6 +70,12 @@ public class UTKit {
             menuString.append(EOL);
         }
         return menuString.toString();
+    }
+
+    public static Date setExpiryDate(Date date, int days) {
+        LocalDateTime expiryDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        expiryDate = expiryDate.plusDays(days);
+        return Date.from(expiryDate.atZone(ZoneId.systemDefault()).toInstant());
     }
 
 }
