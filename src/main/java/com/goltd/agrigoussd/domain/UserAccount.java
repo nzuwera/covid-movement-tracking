@@ -1,5 +1,6 @@
 package com.goltd.agrigoussd.domain;
 
+import com.goltd.agrigoussd.helpers.annotations.Encrypted;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 import org.hibernate.annotations.Type;
@@ -49,6 +50,7 @@ public class UserAccount {
     private String villageCode;
 
     @Column(name = "PIN")
+    @Encrypted
     private String pin;
 
     public UserAccount() {
