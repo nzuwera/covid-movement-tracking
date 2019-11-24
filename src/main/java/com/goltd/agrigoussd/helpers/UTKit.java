@@ -1,6 +1,8 @@
 package com.goltd.agrigoussd.helpers;
 
 import com.goltd.agrigoussd.domain.UssdMenu;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -12,6 +14,7 @@ import java.util.List;
  */
 public class UTKit {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UTKit.class);
     public static final String EOL = "\n";
     public static final String JOINER = ":";
     public static final String EMPTY = "";
@@ -45,6 +48,11 @@ public class UTKit {
         return lastInputs[lastInputs.length - 1];
     }
 
+    public static String getLastInput(String input, int limit) {
+        String[] lastInputs = input.split(JOINER);
+        return lastInputs[lastInputs.length - limit];
+    }
+
     public static String listMenus(List<UssdMenu> menus) {
         StringBuilder menuString = new StringBuilder();
         for (int i = 0; i < menus.size(); i++) {
@@ -60,6 +68,29 @@ public class UTKit {
         LocalDateTime expiryDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         expiryDate = expiryDate.plusDays(days);
         return Date.from(expiryDate.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    public static String getLocationCode(String lastInput, String locationType) {
+        String[] lastInputs = lastInput.split(JOINER);
+        int limit = 0;
+        StringBuilder locationCode = new StringBuilder();
+        if (locationType.equals("province")) {
+            limit = 1;
+        } else if (locationType.equals("district")) {
+            limit = 2;
+        } else if (locationType.equals("sector")) {
+            limit = 3;
+        } else if (locationType.equals("cell")) {
+            limit = 4;
+        } else if (locationType.equals("village")) {
+            limit = 5;
+        }
+        for (int i = lastInputs.length - limit; i < lastInputs.length; i++) {
+            LOGGER.info("locationType {} lowerLimit  {}", locationType, i);
+            locationCode.append((String.valueOf(lastInputs[i]).length() > 1 ? String.valueOf(lastInputs[i]) :"0" + lastInputs[i]));
+        }
+
+        return locationCode.toString();
     }
 
 }

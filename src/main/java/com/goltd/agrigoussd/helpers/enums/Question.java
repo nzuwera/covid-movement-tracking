@@ -16,6 +16,7 @@ public enum Question {
     REGISTRATION_COMPLETED,
 
     // Main questions
+    MAIN_LOGIN,
     MAIN_ENTER_PIN,
     MAIN_SELECT_SERVICE,
     MAIN_ASSOCIATIONS,
