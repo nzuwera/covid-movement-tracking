@@ -17,6 +17,7 @@ public enum Question {
 
     // Main questions
     MAIN_LOGIN,
+    MAIN_MENU,
     MAIN_ENTER_PIN,
     MAIN_SELECT_SERVICE,
     MAIN_ASSOCIATIONS,
@@ -29,6 +30,7 @@ public enum Question {
     MAIN_HELP,
 
     // Association
+    ASSOCIATION_MANAGEMENT,
     ASSOCIATIONS_ENTER_ASSOCIATION_CODE,
     ASSOCIATIONS_SHOW_JOINED_ASSOCIATION,
     ASSOCIATIONS_SHOW_MY_ASSOCIATIONS,
@@ -39,6 +41,7 @@ public enum Question {
     ASSOCIATIONS_VIEW,
 
     // Land management
+    LAND_MANAGEMENT,
     LAND_REGISTER_PLOT,
     LAND_PLOT_SIZE,
     LAND_PLOT_UPI,
@@ -65,6 +68,7 @@ public enum Question {
     ACTIVITY_CONFIRM_MESSAGE,
 
     // Mini- report
+    REPORT_MANAGEMENT,
     REPORT_SUMMARY_OF_COST,
     REPORT_LAST_RECORDED_ACTIVITY,
     REPORT_PREDICTED_HARVEST,
