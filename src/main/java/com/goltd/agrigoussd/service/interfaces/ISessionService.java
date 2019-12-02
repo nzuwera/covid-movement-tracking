@@ -13,4 +13,6 @@ public interface ISessionService {
     Session update(Session session);
 
     void delete(Session session);
+
+    Boolean isExpired(Session session);
 }

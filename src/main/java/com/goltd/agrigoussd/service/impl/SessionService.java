@@ -1,6 +1,7 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.Session;
+import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.repository.SessionRepository;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +40,11 @@ public class SessionService implements ISessionService {
     @Override
     public void delete(Session session) {
         sessionRepository.delete(session);
+    }
+
+    @Override
+    public Boolean isExpired(Session session) {
+        int elapsedTime = UTKit.elapsedMinutes(session.getTransactionDatetime());
+        return elapsedTime > 5 ? Boolean.TRUE : Boolean.FALSE;
     }
 }
