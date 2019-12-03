@@ -12,5 +12,6 @@ public interface IMenuService {
 
     List<UssdMenu> getChildrenByQuestion(Question question);
 
+    List<UssdMenu> getMenusByQuestion(Question question);
 
 }

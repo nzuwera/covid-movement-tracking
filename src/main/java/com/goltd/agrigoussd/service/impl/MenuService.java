@@ -26,11 +26,16 @@ public class MenuService implements IMenuService {
 
     @Override
     public List<UssdMenu> getByParentId(UssdMenu menu) {
-        return menuRepository.findByParentId(menu);
+        return menuRepository.getChildrenByParentId(menu.getId());
     }
 
     @Override
     public List<UssdMenu> getChildrenByQuestion(Question question) {
         return menuRepository.findUssdMenusByParentIdQuestionOrderByPriorityAsc(question);
+    }
+
+    @Override
+    public List<UssdMenu> getMenusByQuestion(Question question) {
+        return menuRepository.findUssdMenusByQuestion(question);
     }
 }

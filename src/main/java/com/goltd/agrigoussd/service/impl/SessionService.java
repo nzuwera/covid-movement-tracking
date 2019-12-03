@@ -39,7 +39,7 @@ public class SessionService implements ISessionService {
 
     @Override
     public void delete(Session session) {
-        sessionRepository.delete(session);
+        sessionRepository.deleteByMsisdn(session.getMsisdn());
     }
 
     @Override

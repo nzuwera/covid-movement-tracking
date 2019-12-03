@@ -12,6 +12,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * USSD Tool Kit helper class
@@ -97,7 +99,7 @@ public class UTKit {
         return locationCode.toString();
     }
 
-    public static UserAccount getUserDetailsFromLastInput(String msisdn,String lastInput) {
+    public static UserAccount getUserDetailsFromLastInput(String msisdn, String lastInput) {
         UserAccount userAccount = new UserAccount();
         String[] userDetails = lastInput.split(JOINER);
         Gender gender = (userDetails[2].equals("1") ? Gender.MALE : Gender.FEMALE);
@@ -115,9 +117,21 @@ public class UTKit {
         userAccount.setAccountState(AccountState.PENDING_SUBSCRIPTION);
         userAccount.setVillageCode(villageCode);
         userAccount.setMsisdn(msisdn);
-        userAccount.setExpireDate(setExpiryDate(new Date(),7));
+        userAccount.setExpireDate(setExpiryDate(new Date(), 7));
         userAccount.setPin(userDetails[8]);
         return userAccount;
+    }
+
+    public static boolean validateFullName(String fullName) {
+        Pattern p = Pattern.compile("^[ A-Za-z]+$");
+        Matcher m = p.matcher(fullName);
+        return m.matches();
+    }
+
+    public static boolean validateAge(String age) {
+        Pattern p = Pattern.compile("^[0-9]+$");
+        Matcher m = p.matcher(age);
+        return (m.matches() && (Integer.parseInt(age) >= 18));
     }
 
 }

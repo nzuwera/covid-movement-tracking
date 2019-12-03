@@ -1,6 +1,7 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.Session;
+import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
@@ -8,10 +9,7 @@ import com.goltd.agrigoussd.helpers.UssdResponse;
 import com.goltd.agrigoussd.helpers.enums.*;
 import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
 import com.goltd.agrigoussd.helpers.formatter.ListFormatter;
-import com.goltd.agrigoussd.service.interfaces.ILocationService;
-import com.goltd.agrigoussd.service.interfaces.IMenuService;
-import com.goltd.agrigoussd.service.interfaces.INavigationManager;
-import com.goltd.agrigoussd.service.interfaces.ISessionService;
+import com.goltd.agrigoussd.service.interfaces.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +25,14 @@ public class NavigationManager implements INavigationManager {
     private ISessionService sessionService;
     private IMenuService menuService;
     private ILocationService locationService;
+    private IUserService userService;
 
     @Autowired
-    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService) {
+    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService) {
         this.sessionService = sessionService;
         this.menuService = menuService;
         this.locationService = locationService;
+        this.userService = userService;
     }
 
     private Session session;
@@ -41,28 +41,35 @@ public class NavigationManager implements INavigationManager {
     private Boolean leaf;
 
     @Override
-    public Session forward(UssdRequest request) {
+    public Session forward(Session session, UssdRequest request) {
 
 
         /*
          * Get Current Session
          */
-        session = sessionService.getByMsisdn(request.getMsisdn());
         Question currentQuestion = session.getQuestion();
         previousQuestion = session.getPreviousQuestion();
         /*
          * Get Previous Menu
+         * Get Parent Menu
          */
-        List<UssdMenu> previousMenus = menuService.getChildrenByQuestion(currentQuestion);
+        UssdMenu parentMenu = menuService.getByQuestion(previousQuestion);
+        LOGGER.info("parentMenu {}", parentMenu);
+        List<UssdMenu> previousMenus = menuService.getByParentId(parentMenu);
+        LOGGER.info("previousMenus {}", previousMenus);
         if (previousMenus.get(0).getQuestionType() == QuestionType.LIST) {
             /*
              * Get Selected Menu
              */
             UssdMenu selectedMenu = previousMenus.get(Integer.parseInt(request.getInput()) - 1);
+            LOGGER.info("selectedMenu {}", selectedMenu);
             /*
              * Get NextMenus
              */
-            List<UssdMenu> nextMenus = menuService.getChildrenByQuestion(selectedMenu.getQuestion());
+            List<UssdMenu> nextMenus = menuService.getByParentId(selectedMenu);
+            for (UssdMenu menu : nextMenus) {
+                LOGGER.info("nextMenus question {}", menu.getQuestion());
+            }
             /*
              * Get Next state
              */
@@ -82,6 +89,8 @@ public class NavigationManager implements INavigationManager {
              */
             selectedQuestion = nextMenus.get(0).getQuestion();
             leaf = nextMenus.get(0).getLeaf();
+            LOGGER.info("previousMenus {}", previousMenus);
+            LOGGER.info("selectedQuestion {}", selectedQuestion);
         } else if (previousMenus.get(0).getQuestionType() == QuestionType.ENUM || previousMenus.get(0).getQuestionType() == QuestionType.MESSAGE || previousMenus.get(0).getQuestionType() == QuestionType.FORM_INPUT) {
             /*
              * Get Selected Menu
@@ -204,31 +213,62 @@ public class NavigationManager implements INavigationManager {
                     listMessage.append(menus.get(0).getTitleKin());
                     listMessage.append(UTKit.EOL);
                     listMessage.append(ListFormatter.formatLocations(locationService.getCells(locationCode)));
+                    LOGGER.info("locationCode {}", locationCode);
                     break;
                 case REGISTRATION_SELECT_LOCATION_VILLAGE:
                     locationCode = UTKit.getLocationCode(session.getLastInput(), "cell");
                     listMessage.append(menus.get(0).getTitleKin());
                     listMessage.append(UTKit.EOL);
                     listMessage.append(ListFormatter.formatLocations(locationService.getVillages(locationCode)));
+                    LOGGER.info("locationCode {}", locationCode);
                     break;
+                case REGISTRATION_ENTER_PIN:
+                    listMessage.append(menus.get(0).getTitleKin());
+                    LOGGER.info("REGISTRATION_ENTER_PIN {}", ussdRequest.getInput());
+                    break;
+                case REGISTRATION_VERIFY_PIN:
+                    listMessage.append(menus.get(0).getTitleKin());
+                    LOGGER.info("REGISTRATION_VERIFY_PIN {}", ussdRequest.getInput());
+                    break;
+                case REGISTRATION_COMPLETED:
+                    String lastInput = session.getLastInput();
+                    UserAccount userAccount = UTKit.getUserDetailsFromLastInput(ussdRequest.getMsisdn(), lastInput);
+                    try {
+                        userService.create(userAccount);
+                        listMessage.append(menus.get(0).getTitleKin());
+                    } catch (Exception ex) {
+                        LOGGER.error("Registration Error {}", ex.getMessage());
+                        listMessage.append("Registration failed: ");
+                    }
+                    break;
+
                 default:
                     listMessage.append(menus.get(0).getTitleKin());
                     break;
             }
         }
+        session.setLeaf(menus.get(0).getLeaf());
+        sessionService.update(session);
+        LOGGER.info("currentInput {}", ussdRequest.getInput());
         LOGGER.info("lastInput {}", session.getLastInput());
-        LOGGER.info("locationCode {}", locationCode);
         return listMessage;
-    }
-
-    @Override
-    public String formatMenu(String header, UssdRequest ussdRequest, List<UssdMenu> ussdMenus) {
-        return null;
     }
 
     @Override
     public String sendUssdResponse(UssdResponse ussdResponse, HttpServletResponse httpServletResponse) {
         httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, ussdResponse.getFreeflow().name());
         return ussdResponse.getMessage();
+    }
+
+
+    @Override
+    public String traverseForward(Session session, UssdRequest request) {
+        Question currentQuestion = session.getQuestion();
+        Question previousQuestion = session.getPreviousQuestion();
+
+        List<UssdMenu> previousMenus = menuService.getMenusByQuestion(previousQuestion);
+        List<UssdMenu> menus = menuService.getMenusByQuestion(currentQuestion);
+
+        return null;
     }
 }

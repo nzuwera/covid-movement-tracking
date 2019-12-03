@@ -2,7 +2,6 @@ package com.goltd.agrigoussd.controller;
 
 
 import com.goltd.agrigoussd.domain.Session;
-import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.UssdResponse;
 import com.goltd.agrigoussd.helpers.enums.Freeflow;
@@ -46,13 +45,13 @@ public class UssdEndpoint {
         UssdResponse ussdResponse;
         String ussdMessage;
         Session session;
+        Session currentSession;
         Question question;
 
         /*
          * Check if user has dialed *909# or is continuing an open session
          */
-        if (request.getNewRequest().equals("1") && request.getInput().startsWith("*")) {
-            LOGGER.info("ussdRequest {}", request);
+        if (request.getNewRequest().equals("1") && request.getInput().startsWith("*") && request.getInput().endsWith("#")) {
             /*
              * Set User default language to KIN
              */
@@ -81,18 +80,22 @@ public class UssdEndpoint {
              * Check if a ussd session already exists
              */
             if (Boolean.TRUE.equals(sessionService.exists(request.getMsisdn()))) {
-                session = sessionService.getByMsisdn(request.getMsisdn());
-                LOGGER.info("hasSession::ussdSession {}", session);
-                int diffmin = UTKit.elapsedMinutes(session.getTransactionDatetime());
-                question = session.getQuestion();
+                currentSession = sessionService.getByMsisdn(request.getMsisdn());
+                LOGGER.info("hasSession::ussdSession {}", currentSession);
+                question = currentSession.getQuestion();
                 /*
                  * USSD Session resume:
                  *  - Must Not be the last menu
                  *  - Must not have expired
                  */
-                if (Boolean.TRUE.equals(session.getLeaf()) || diffmin >= 4) {
-                    sessionService.delete(session);
-                    sessionService.create(session);
+                LOGGER.info("session.getLeaf : {}", currentSession.getLeaf());
+                if (session.getLeaf().equals(true)) {
+                    try {
+                        sessionService.delete(currentSession);
+                        sessionService.create(session);
+                    }catch (Exception ex){
+                        throw ex;
+                    }
                     LOGGER.info("sessionService.create {}", session);
                 }
                 /*
@@ -106,7 +109,7 @@ public class UssdEndpoint {
                  * Initialize USSD session
                  */
                 sessionService.create(session);
-                ussdResponse = navigationManager.buildMenu(request, Question.REGISTRATION_START);
+                ussdResponse = navigationManager.buildMenu(request, session.getQuestion());
                 ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
             }
         } else if (request.getNewRequest().equals("0")) {
@@ -139,7 +142,7 @@ public class UssdEndpoint {
                  * Change User's prefered language.
                  */
 
-                session = navigationManager.forward(request);
+                session = navigationManager.forward(session, request);
                 question = session.getQuestion();
                 ussdResponse = navigationManager.buildMenu(request, question);
             }

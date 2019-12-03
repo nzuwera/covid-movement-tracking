@@ -8,6 +8,7 @@ import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
+import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +25,13 @@ public class TestController {
 
     private IMenuService menuService;
     private IUserService userService;
+    private ISessionService sessionService;
 
     @Autowired
-    public TestController(IMenuService menuService, IUserService userService) {
+    public TestController(IMenuService menuService, IUserService userService, ISessionService sessionService) {
         this.menuService = menuService;
         this.userService = userService;
+        this.sessionService = sessionService;
     }
 
     @GetMapping(value = "/getChildrenByQuestion/{question}")
@@ -37,6 +40,27 @@ public class TestController {
             return menuService.getChildrenByQuestion(Question.valueOf(question));
         } catch (EnumConstantNotPresentException e) {
             return new ArrayList<>();
+        }
+    }
+
+    @GetMapping(value = "/getByParent/{question}")
+    public List<UssdMenu> getByParentId(@PathVariable String question) {
+        try {
+            UssdMenu menu = menuService.getByQuestion(Question.valueOf(question));
+            return menuService.getByParentId(menu);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+
+    @DeleteMapping(value = "/delete/{msisdn}")
+    public String clearSession(@PathVariable String msisdn) {
+        try {
+            sessionService.delete(sessionService.getByMsisdn(msisdn));
+            return "user " + msisdn + " deleted";
+        } catch (Exception e) {
+            return e.getMessage();
         }
     }
 

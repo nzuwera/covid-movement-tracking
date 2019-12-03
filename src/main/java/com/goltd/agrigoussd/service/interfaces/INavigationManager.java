@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface INavigationManager {
 
-    Session forward(UssdRequest request);
+    Session forward(Session session,UssdRequest request);
 
     Session backward(UssdRequest request);
 
@@ -22,8 +22,8 @@ public interface INavigationManager {
 
     StringBuilder formatMenu(UssdRequest ussdRequest, List<UssdMenu> menus);
 
-    String formatMenu(String header, UssdRequest ussdRequest, List<UssdMenu> ussdMenus);
-
     String sendUssdResponse(UssdResponse ussdResponse, HttpServletResponse httpServletResponse);
+
+    String traverseForward(Session session, UssdRequest request);
 
 }
