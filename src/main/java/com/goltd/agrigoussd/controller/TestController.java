@@ -37,7 +37,7 @@ public class TestController {
     @GetMapping(value = "/getChildrenByQuestion/{question}")
     public List<UssdMenu> getChildrenByQuestion(@PathVariable String question) {
         try {
-            return menuService.getChildrenByQuestion(Question.valueOf(question));
+            return menuService.getNextMenus(Question.valueOf(question));
         } catch (EnumConstantNotPresentException e) {
             return new ArrayList<>();
         }
@@ -47,7 +47,7 @@ public class TestController {
     public List<UssdMenu> getByParentId(@PathVariable String question) {
         try {
             UssdMenu menu = menuService.getByQuestion(Question.valueOf(question));
-            return menuService.getByParentId(menu);
+            return menuService.getNextMenus(menu);
         } catch (Exception e) {
             throw e;
         }

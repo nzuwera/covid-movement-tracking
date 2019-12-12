@@ -55,7 +55,7 @@ public class NavigationManager implements INavigationManager {
          */
         UssdMenu parentMenu = menuService.getByQuestion(previousQuestion);
         LOGGER.info("parentMenu {}", parentMenu);
-        List<UssdMenu> previousMenus = menuService.getByParentId(parentMenu);
+        List<UssdMenu> previousMenus = menuService.getNextMenus(parentMenu);
         LOGGER.info("previousMenus {}", previousMenus);
         if (previousMenus.get(0).getQuestionType() == QuestionType.LIST) {
             /*
@@ -66,7 +66,7 @@ public class NavigationManager implements INavigationManager {
             /*
              * Get NextMenus
              */
-            List<UssdMenu> nextMenus = menuService.getByParentId(selectedMenu);
+            List<UssdMenu> nextMenus = menuService.getNextMenus(selectedMenu);
             for (UssdMenu menu : nextMenus) {
                 LOGGER.info("nextMenus question {}", menu.getQuestion());
             }
@@ -83,7 +83,7 @@ public class NavigationManager implements INavigationManager {
             /*
              * Get NextMenus
              */
-            List<UssdMenu> nextMenus = menuService.getChildrenByQuestion(selectedMenu.getQuestion());
+            List<UssdMenu> nextMenus = menuService.getNextMenus(selectedMenu.getQuestion());
             /*
              * Get Next state
              */
@@ -99,7 +99,7 @@ public class NavigationManager implements INavigationManager {
             /*
              * Get NextMenus
              */
-            List<UssdMenu> nextMenus = menuService.getChildrenByQuestion(selectedMenu.getQuestion());
+            List<UssdMenu> nextMenus = menuService.getNextMenus(selectedMenu.getQuestion());
             /*
              * Get Next state
              */
@@ -128,7 +128,7 @@ public class NavigationManager implements INavigationManager {
         } else if (previousQuestion.equals(Question.REGISTRATION_START)) {
             session = this.toMainMenu(ussdRequest, Visibility.UNREGISTERED);
         } else {
-            List<UssdMenu> previousMenus = menuService.getChildrenByQuestion(previousQuestion);
+            List<UssdMenu> previousMenus = menuService.getNextMenus(previousQuestion);
             UssdMenu ussdMenu = menuService.getByQuestion(previousMenus.get(0).getQuestion());
             UssdMenu parentMenu = ussdMenu.getParentMenu();
             Question parentQuestion = parentMenu.getQuestion();
@@ -166,7 +166,7 @@ public class NavigationManager implements INavigationManager {
     @Override
     public UssdResponse buildMenu(UssdRequest ussdRequest, Question question) {
         UssdResponse response = new UssdResponse();
-        List<UssdMenu> menus = menuService.getChildrenByQuestion(question);
+        List<UssdMenu> menus = menuService.getNextMenus(question);
         response.setFreeflow(menus.get(0).getLeaf());
         response.setMessage(this.formatMenu(ussdRequest, menus).toString());
         return response;

@@ -8,10 +8,8 @@ import java.util.List;
 public interface IMenuService {
     UssdMenu getByQuestion(Question question);
 
-    List<UssdMenu> getByParentId(UssdMenu menu);
+    List<UssdMenu> getNextMenus(UssdMenu menu);
 
-    List<UssdMenu> getChildrenByQuestion(Question question);
-
-    List<UssdMenu> getMenusByQuestion(Question question);
+    List<UssdMenu> getNextMenus(Question question);
 
 }
