@@ -7,11 +7,7 @@ import com.goltd.agrigoussd.helpers.enums.Gender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,9 +67,10 @@ public class UTKit {
     }
 
     public static Date setExpiryDate(Date date, int days) {
-        LocalDateTime expiryDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-        expiryDate = expiryDate.plusDays(days);
-        return Date.from(expiryDate.atZone(ZoneId.systemDefault()).toInstant());
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(date);
+        cal.add(Calendar.DATE, days);
+        return cal.getTime();
     }
 
     public static String getLocationCode(String lastInput, String locationType) {
@@ -132,6 +129,11 @@ public class UTKit {
         Pattern p = Pattern.compile("^[0-9]+$");
         Matcher m = p.matcher(age);
         return (m.matches() && (Integer.parseInt(age) >= 18));
+    }
+
+    public static boolean isExpired(Date date) {
+        Date today = new Date();
+        return (today.getTime() -date.getTime()) >= 5*60*1000;
     }
 
 }

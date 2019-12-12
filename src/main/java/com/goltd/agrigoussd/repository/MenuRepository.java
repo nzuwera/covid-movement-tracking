@@ -13,12 +13,12 @@ import java.util.UUID;
 public interface MenuRepository extends JpaRepository<UssdMenu, UUID> {
     UssdMenu findByQuestion(Question question);
 
-    List<UssdMenu> findByParentId(UssdMenu menu);
+    List<UssdMenu> findByParentMenu(UssdMenu menu);
 
-    List<UssdMenu> findUssdMenusByParentIdQuestionOrderByPriorityAsc(Question question);
+    List<UssdMenu> findUssdMenusByParentMenuQuestionOrderByPriorityAsc(Question question);
 
     List<UssdMenu> findUssdMenusByQuestion(Question question);
 
     @Query(value = "select * from ussd_menu m where m.parent_id = ?1", nativeQuery = true)
-    List<UssdMenu> getChildrenByParentId(UUID uuid);
+    List<UssdMenu> getChildrenByParentMenu(UUID uuid);
 }

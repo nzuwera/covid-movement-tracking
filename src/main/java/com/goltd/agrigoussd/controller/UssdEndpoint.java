@@ -2,6 +2,7 @@ package com.goltd.agrigoussd.controller;
 
 
 import com.goltd.agrigoussd.domain.Session;
+import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.UssdResponse;
 import com.goltd.agrigoussd.helpers.enums.Freeflow;
@@ -40,7 +41,7 @@ public class UssdEndpoint {
     }
 
     @GetMapping(value = "/agrigo")
-    public String getUssdResponse(UssdRequest request, HttpServletResponse httpResponse) {
+    public String ussdHandler(UssdRequest request, HttpServletResponse httpResponse) {
 
         UssdResponse ussdResponse;
         String ussdMessage;
@@ -88,15 +89,9 @@ public class UssdEndpoint {
                  *  - Must Not be the last menu
                  *  - Must not have expired
                  */
-                LOGGER.info("session.getLeaf : {}", currentSession.getLeaf());
-                if (session.getLeaf().equals(true)) {
-                    try {
-                        sessionService.delete(currentSession);
-                        sessionService.create(session);
-                    }catch (Exception ex){
-                        throw ex;
-                    }
-                    LOGGER.info("sessionService.create {}", session);
+                if (currentSession.getLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(currentSession.getTransactionDatetime()))) {
+                    sessionService.delete(currentSession);
+                    sessionService.create(session);
                 }
                 /*
                  * Build next USSD menu

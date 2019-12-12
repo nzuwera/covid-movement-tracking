@@ -130,7 +130,7 @@ public class NavigationManager implements INavigationManager {
         } else {
             List<UssdMenu> previousMenus = menuService.getChildrenByQuestion(previousQuestion);
             UssdMenu ussdMenu = menuService.getByQuestion(previousMenus.get(0).getQuestion());
-            UssdMenu parentMenu = ussdMenu.getParentId();
+            UssdMenu parentMenu = ussdMenu.getParentMenu();
             Question parentQuestion = parentMenu.getQuestion();
             session.setLastInput(newInput);
             session.setMsisdn(ussdRequest.getMsisdn());
@@ -263,12 +263,6 @@ public class NavigationManager implements INavigationManager {
 
     @Override
     public String traverseForward(Session session, UssdRequest request) {
-        Question currentQuestion = session.getQuestion();
-        Question previousQuestion = session.getPreviousQuestion();
-
-        List<UssdMenu> previousMenus = menuService.getMenusByQuestion(previousQuestion);
-        List<UssdMenu> menus = menuService.getMenusByQuestion(currentQuestion);
-
         return null;
     }
 }

@@ -58,9 +58,9 @@ public class UssdMenu {
 
     @ManyToOne()
     @JoinColumn(name = "PARENT_ID",referencedColumnName = "ID")
-    private UssdMenu parentId;
+    private UssdMenu parentMenu;
 
-    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parentMenu", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<UssdMenu> children = new HashSet<>();
 
@@ -149,12 +149,12 @@ public class UssdMenu {
         this.visibility = visibility;
     }
 
-    public UssdMenu getParentId() {
-        return parentId;
+    public UssdMenu getParentMenu() {
+        return parentMenu;
     }
 
-    public void setParentId(UssdMenu parentId) {
-        this.parentId = parentId;
+    public void setParentMenu(UssdMenu parentMenu) {
+        this.parentMenu = parentMenu;
     }
 
     public Set<UssdMenu> getChildren() {
@@ -178,7 +178,7 @@ public class UssdMenu {
                 ", serviceStart=" + serviceStart +
                 ", priority=" + priority +
                 ", visibility=" + visibility +
-                ", parentId=" + parentId +
+                ", parentMenu=" + parentMenu +
                 '}';
     }
 }

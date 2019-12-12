@@ -24,7 +24,7 @@ public class Menu {
     public Menu(UssdMenu ussdMenu) {
         this.id = ussdMenu.getId();
         this.isLeaf = ussdMenu.getLeaf();
-        this.parentId = ussdMenu.getParentId().getId();
+        this.parentId = ussdMenu.getParentMenu().getId();
         this.question = ussdMenu.getQuestion();
         this.questionnaire = ussdMenu.getQuestionnaire();
         this.questionType = ussdMenu.getQuestionType();
