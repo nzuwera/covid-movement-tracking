@@ -47,7 +47,6 @@ public class UssdEndpoint {
         String ussdMessage;
         Session session;
         Session currentSession;
-        Question question;
 
         /*
          * Check if user has dialed *909# or is continuing an open session
@@ -73,38 +72,35 @@ public class UssdEndpoint {
 
             } else {
                 session.setQuestionnaire(Questionnaire.MAIN);
-                session.setPreviousQuestion(Question.MAIN_LOGIN);
-                session.setQuestion(Question.MAIN_LOGIN);
+                // session.setPreviousQuestion(Question.MAIN_ENTER_PIN);
+                session.setQuestion(Question.MAIN_ENTER_PIN);
                 session.setStartService(false);
             }
             /*
              * Check if a ussd session already exists
              */
             if (Boolean.TRUE.equals(sessionService.exists(request.getMsisdn()))) {
-                currentSession = sessionService.getByMsisdn(request.getMsisdn());
-                LOGGER.info("hasSession::ussdSession {}", currentSession);
-                question = currentSession.getQuestion();
+                session = sessionService.getByMsisdn(request.getMsisdn());
                 /*
                  * USSD Session resume:
                  *  - Must Not be the last menu
                  *  - Must not have expired
                  */
-                if (currentSession.getLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(currentSession.getTransactionDatetime()))) {
-                    sessionService.delete(currentSession);
+                if (session.getLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(session.getTransactionDatetime()))) {
+                    sessionService.delete(session);
                     sessionService.create(session);
                 }
                 /*
                  * Build next USSD menu
                  */
-                ussdResponse = navigationManager.buildMenu(request, question);
-                LOGGER.info("ussdResponse{}", ussdResponse);
+                ussdResponse = navigationManager.buildMenu(request, session);
                 ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
             } else {
                 /*
                  * Initialize USSD session
                  */
-                sessionService.create(session);
-                ussdResponse = navigationManager.buildMenu(request, session.getQuestion());
+                // sessionService.create(session);
+                ussdResponse = navigationManager.buildMenu(request, session);
                 ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
             }
         } else if (request.getNewRequest().equals("0")) {
@@ -119,8 +115,7 @@ public class UssdEndpoint {
                  * - 0 Go Back
                  */
                 session = navigationManager.backward(request);
-                question = session.getQuestion();
-                ussdResponse = navigationManager.buildMenu(request, question);
+                ussdResponse = navigationManager.buildMenu(request, session);
             } else if (request.getInput().equals("99") && !session.getQuestion().equals(Question.MAIN_LOGIN) && !session.getQuestion().equals(Question.REGISTRATION_START)) {
                 /*
                  * USSD Backward navigation:
@@ -128,18 +123,14 @@ public class UssdEndpoint {
                  */
                 Visibility visibility = (session.getQuestionnaire().equals(Questionnaire.REGISTRATION) ? Visibility.UNREGISTERED : Visibility.REGISTERED);
                 session = navigationManager.toMainMenu(request, visibility);
-                question = session.getQuestion();
-                ussdResponse = navigationManager.buildMenu(request, question);
+                ussdResponse = navigationManager.buildMenu(request, session);
             } else {
                 /*
                  * USSD Forward navigation:
                  *
                  * Change User's prefered language.
                  */
-
-                session = navigationManager.forward(session, request);
-                question = session.getQuestion();
-                ussdResponse = navigationManager.buildMenu(request, question);
+                ussdResponse = navigationManager.buildMenu(request, session);
             }
             ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
 
@@ -149,7 +140,7 @@ public class UssdEndpoint {
         /*
          * Display USSD Message
          */
-
+        LOGGER.info("ussdResponse \n{}", ussdMessage);
         return ussdMessage;
     }
 }

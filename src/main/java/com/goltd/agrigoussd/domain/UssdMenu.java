@@ -5,23 +5,15 @@ import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.QuestionType;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
 import com.goltd.agrigoussd.helpers.enums.Visibility;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "USSD_MENU")
-public class UssdMenu {
-
-    @Id
-    @Type(type = "pg-uuid")
-    @NotNull
-    @Column(name = "ID")
-    private UUID id;
+public class UssdMenu extends AbstractEntity {
 
     @Column(name = "TITLE_ENG")
     private String titleEng;
@@ -67,14 +59,6 @@ public class UssdMenu {
 
     public UssdMenu() {
         // Empty constructor
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public String getTitleEng() {
@@ -168,7 +152,6 @@ public class UssdMenu {
     @Override
     public String toString() {
         return "UssdMenu{" +
-                "id=" + id +
                 ", titleEng='" + titleEng + '\'' +
                 ", titleKin='" + titleKin + '\'' +
                 ", registration=" + questionnaire +

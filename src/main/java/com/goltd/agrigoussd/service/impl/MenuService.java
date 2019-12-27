@@ -26,7 +26,7 @@ public class MenuService implements IMenuService {
 
     @Override
     public List<UssdMenu> getNextMenus(UssdMenu menu) {
-        return menuRepository.getChildrenByParentMenu(menu.getId());
+        return menuRepository.findByParentMenuOrderByPriorityAsc(menu);
     }
 
     @Override

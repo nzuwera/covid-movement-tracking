@@ -2,32 +2,22 @@ package com.goltd.agrigoussd.domain;
 
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
-import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
 @Table(name = "SESSION", uniqueConstraints = {
         @UniqueConstraint(columnNames = "MSISDN", name = "CONSTRAINT_SESSION_MSISDN")
 })
-public class Session {
-
-
-    @Id
-    @Type(type = "pg-uuid")
-    @NotNull
-    @Column(name = "ID")
-    private UUID id;
+public class Session extends AbstractEntity {
 
     @Column(name = "MSISDN")
     private String msisdn;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "PREVIOUS_QUESTION", nullable = false, columnDefinition = "varchar(255) default 'MAIN'")
+    @Column(name = "PREVIOUS_QUESTION", columnDefinition = "varchar(255) default 'MAIN'")
     private Question previousQuestion;
 
     @Enumerated(EnumType.STRING)
@@ -56,14 +46,6 @@ public class Session {
 
     public Session() {
         // Default Constructor
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public String getMsisdn() {
@@ -142,7 +124,6 @@ public class Session {
     @Override
     public String toString() {
         return "Session{" +
-                "id=" + id +
                 ", msisdn='" + msisdn + '\'' +
                 ", previousQuestion=" + previousQuestion +
                 ", questionnaire=" + questionnaire +

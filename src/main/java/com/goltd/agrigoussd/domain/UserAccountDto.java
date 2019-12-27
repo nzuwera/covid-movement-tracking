@@ -3,24 +3,23 @@ package com.goltd.agrigoussd.domain;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 
 public class UserAccountDto {
 
-    @NotNull
+    @NotEmpty
     private String msisdn;
-    @NotNull
+    @NotEmpty
     private String fullName;
-    @NotNull
+    @NotEmpty
     private int age;
-    @NotNull
+    @NotEmpty
     private Gender gender;
-
-    @NotNull
+    @NotEmpty
     private AccountState accountState;
-    @NotNull
+    @NotEmpty
     private String villageCode;
-    @NotNull
+    @NotEmpty
     private String pin;
 
     public UserAccountDto() {

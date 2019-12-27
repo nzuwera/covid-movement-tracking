@@ -3,7 +3,10 @@ package com.goltd.agrigoussd.helpers;
 import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
+import com.goltd.agrigoussd.helpers.enums.BuyerType;
 import com.goltd.agrigoussd.helpers.enums.Gender;
+import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +69,38 @@ public class UTKit {
         return menuString.toString();
     }
 
+    public static String listEnums(String header, Question question) {
+        StringBuilder ussdMessage = new StringBuilder();
+        switch (question) {
+            case REGISTRATION_SELECT_GENDER:
+                ussdMessage.append(header);
+                ussdMessage.append(UTKit.EOL);
+                ussdMessage.append(EnumFormatter.format(Gender.class));
+                break;
+            case ACTIVITY_SHOW_CATEGORY:
+                ussdMessage.append(header);
+//                ussdMessage.append(UTKit.EOL);
+//                ussdMessage.append(EnumFormatter.format(ActivityCategory.class));
+                break;
+            case ACTIVITY_SHOW_LIST:
+                ussdMessage.append(header);
+                ussdMessage.append(UTKit.EOL);
+                ussdMessage.append("Activity list is missing");
+                break;
+            case MARKETPLACE_LIST_PRODUCT:
+                ussdMessage.append(header);
+                ussdMessage.append(UTKit.EOL);
+                ussdMessage.append("Marketplace product list is missing");
+                break;
+            case AIRTIME_BUYER_TYPE:
+                ussdMessage.append(header);
+                ussdMessage.append(UTKit.EOL);
+                ussdMessage.append(EnumFormatter.format(BuyerType.class));
+                break;
+        }
+        return ussdMessage.toString();
+    }
+
     public static Date setExpiryDate(Date date, int days) {
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTime(date);
@@ -99,12 +134,12 @@ public class UTKit {
     public static UserAccount getUserDetailsFromLastInput(String msisdn, String lastInput) {
         UserAccount userAccount = new UserAccount();
         String[] userDetails = lastInput.split(JOINER);
-        Gender gender = (userDetails[2].equals("1") ? Gender.MALE : Gender.FEMALE);
-        String province = "0" + userDetails[3];
-        String district = (userDetails[4].length() > 1 ? userDetails[4] : "0" + userDetails[4]);
-        String sector = (userDetails[5].length() > 1 ? userDetails[5] : "0" + userDetails[5]);
-        String cell = (userDetails[6].length() > 1 ? userDetails[6] : "0" + userDetails[6]);
-        String village = (userDetails[7].length() > 1 ? userDetails[7] : "0" + userDetails[7]);
+        Gender gender = (userDetails[3].equals("1") ? Gender.MALE : Gender.FEMALE);
+        String province = "0" + userDetails[4];
+        String district = (userDetails[5].length() > 1 ? userDetails[5] : "0" + userDetails[5]);
+        String sector = (userDetails[6].length() > 1 ? userDetails[6] : "0" + userDetails[6]);
+        String cell = (userDetails[7].length() > 1 ? userDetails[7] : "0" + userDetails[7]);
+        String village = (userDetails[8].length() > 1 ? userDetails[8] : "0" + userDetails[8]);
         String villageCode = province + district + sector + cell + village;
 
         userAccount.setId(UUID.randomUUID());
@@ -115,7 +150,7 @@ public class UTKit {
         userAccount.setVillageCode(villageCode);
         userAccount.setMsisdn(msisdn);
         userAccount.setExpireDate(setExpiryDate(new Date(), 7));
-        userAccount.setPin(userDetails[8]);
+        userAccount.setPin(userDetails[9]);
         return userAccount;
     }
 
@@ -125,15 +160,19 @@ public class UTKit {
         return m.matches();
     }
 
-    public static boolean validateAge(String age) {
+    public static boolean validateAge(String age, int minAge) {
         Pattern p = Pattern.compile("^[0-9]+$");
         Matcher m = p.matcher(age);
-        return (m.matches() && (Integer.parseInt(age) >= 18));
+        return (m.matches() && (Integer.parseInt(age) >= minAge));
     }
 
     public static boolean isExpired(Date date) {
         Date today = new Date();
-        return (today.getTime() -date.getTime()) >= 5*60*1000;
+        return (today.getTime() - date.getTime()) >= 5 * 60 * 1000;
     }
 
+    public static int getRandomNumberInRange(int min, int max) {
+        Random r = new Random();
+        return r.nextInt((max - min) + 1) + min;
+    }
 }

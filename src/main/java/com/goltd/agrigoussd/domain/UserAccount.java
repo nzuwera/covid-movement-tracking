@@ -3,26 +3,18 @@ package com.goltd.agrigoussd.domain;
 import com.goltd.agrigoussd.helpers.annotations.Encrypted;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
-import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.UUID;
 
 
 @Table(name = "USER_ACCOUNT", uniqueConstraints = {
         @UniqueConstraint(columnNames = "MSISDN", name = "CONSTRAINT_USER_ACCOUNT_MSISDN")
 })
 @Entity
-public class UserAccount {
-
-    @Id
-    @Type(type = "pg-uuid")
-    @NotNull
-    @Column(name = "ID")
-    private UUID id;
+public class UserAccount extends AbstractEntity {
 
     @Column(name = "MSISDN")
     @NotNull
@@ -55,14 +47,6 @@ public class UserAccount {
 
     public UserAccount() {
         // Empty Constructor
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public String getMsisdn() {
@@ -132,7 +116,6 @@ public class UserAccount {
     @Override
     public String toString() {
         return "UserAccount{" +
-                "id=" + id +
                 ", msisdn='" + msisdn + '\'' +
                 ", fullname='" + fullname + '\'' +
                 ", age=" + age +

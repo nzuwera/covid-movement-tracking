@@ -1,4 +1,4 @@
-package com.goltd.agrigoussd.questionnaire.validators;
+package com.goltd.agrigoussd.validators;
 
 import com.goltd.agrigoussd.domain.Location;
 import com.goltd.agrigoussd.domain.UssdMenu;
