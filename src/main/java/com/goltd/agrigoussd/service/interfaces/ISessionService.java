@@ -8,7 +8,7 @@ public interface ISessionService {
 
     Session getByMsisdn(String msisdn);
 
-    void create(Session session);
+    Session create(Session session);
 
     Session update(Session session);
 

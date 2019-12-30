@@ -40,10 +40,11 @@ public class NavigationManager implements INavigationManager {
     private Question previousQuestion;
     private Question selectedQuestion;
     private Boolean leaf;
-    private QuestionType questionType;
 
     @Override
     public Session forward(Session session, UssdRequest request) {
+
+        QuestionType questionType;
         UssdMenu selectedMenu;
         List<UssdMenu> nextMenus;
 
@@ -79,13 +80,11 @@ public class NavigationManager implements INavigationManager {
                 selectedQuestion = nextMenus.get(0).getQuestion();
                 leaf = nextMenus.get(0).getLeaf();
             }
-            LOGGER.info("selectedQuestion {}, Type {}", selectedQuestion, questionType);
         } else if (questionType == QuestionType.DYNAMIC_LIST) {
             selectedMenu = menuService.getByQuestion(currentQuestion);
             nextMenus = menuService.getNextMenus(selectedMenu.getQuestion());
             selectedQuestion = nextMenus.get(0).getQuestion();
             leaf = nextMenus.get(0).getLeaf();
-            LOGGER.info("selectedQuestion {}, Type {}", selectedQuestion, questionType.name());
         } else if (questionType == QuestionType.ENUM || questionType == QuestionType.MESSAGE || questionType == QuestionType.FORM_INPUT) {
 
             if (previousMenus.get(0).getQuestionType() == QuestionType.LIST) {
@@ -99,7 +98,7 @@ public class NavigationManager implements INavigationManager {
                 selectedQuestion = nextMenus.get(0).getQuestion();
                 leaf = nextMenus.get(0).getLeaf();
             }
-            LOGGER.info("selectedQuestion {}, Type {}", selectedQuestion, questionType.name());
+            LOGGER.info("selectedQuestion {}, Type {}", selectedQuestion, questionType);
         }
         /*
          * Update session
@@ -158,133 +157,25 @@ public class NavigationManager implements INavigationManager {
     @Override
     public UssdResponse buildMenu(UssdRequest ussdRequest, Session session) {
         UssdResponse response = new UssdResponse();
-        leaf = false;
-        String ussdMessage = "";
-        UssdMenu currentMenu = menuService.getByQuestion(session.getQuestion());
-        Question nextQuestion = null;
-        List<UssdMenu> nextMenus;
-        UssdMenu parentMenu;
-        List<UssdMenu> parentSiblings;
-
-        nextMenus = menuService.getNextMenus(currentMenu);
-
-        for (UssdMenu nextMenu : nextMenus) {
-            LOGGER.info("nextMenus nextMenu.getQuestion() {}, nextMenu.getTitleKin() {}", nextMenu.getQuestion(), nextMenu.getTitleKin());
-        }
+        Question currentQuestion = session.getQuestion();
+        UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
+        List<UssdMenu> nextMenus = menuService.getNextMenus(currentMenu);
+        selectedQuestion = nextMenus.get(0).getQuestion();
+        previousQuestion = menuService.getByQuestion(selectedQuestion).getParentMenu().getQuestion();
+        leaf = nextMenus.get(0).getLeaf();
+        String displayMessage = UTKit.listMenus(nextMenus);
 
 
-        if (nextMenus.get(0).getQuestionType().equals(QuestionType.LIST)) {
-
-            ussdMessage = UTKit.listMenus(nextMenus);
-
-            leaf = nextMenus.get(0).getLeaf();
-
-            if (nextMenus.get(0).getParentMenu().getQuestionType().equals(QuestionType.LIST)) {
-                parentMenu = currentMenu.getParentMenu();
-                LOGGER.info("nextMenus.get(0).getQuestionType().equals(QuestionType.LIST) | parenMenu {}", parentMenu);
-                parentSiblings = menuService.getNextMenus(parentMenu);
-                previousQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getParentMenu().getQuestion();
-                nextQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getQuestion();
-                LOGGER.info("QuestionType.LIST QuestionType.LIST nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            } else {
-                // VALIDATE FORM_INPUT
-                // VALIDATE
-                previousQuestion = session.getPreviousQuestion();
-                nextQuestion = session.getQuestion();
-                LOGGER.info("QuestionType.LIST else nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            }
-
-        } else if (nextMenus.get(0).getQuestionType().equals(QuestionType.ENUM)) {
-            ussdMessage = UTKit.listEnums(nextMenus.get(0).getTitleKin(), nextMenus.get(0).getQuestion());
-            leaf = nextMenus.get(0).getLeaf();
-            if (nextMenus.get(0).getParentMenu().getQuestionType().equals(QuestionType.LIST)) {
-                parentMenu = currentMenu.getParentMenu();
-                LOGGER.info("nextMenus.get(0).getQuestionType().equals(QuestionType.ENUM) parenMenu {}", parentMenu);
-                parentSiblings = menuService.getNextMenus(parentMenu);
-                for (UssdMenu siblings : parentSiblings) {
-                    LOGGER.info("Siblings question {}, title {} ", siblings.getQuestion(), siblings.getTitleKin());
-                }
-                previousQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getParentMenu().getQuestion();
-                nextQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getQuestion();
-                LOGGER.info("QuestionType.ENUM QuestionType.LIST nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-                session.setQuestion(nextQuestion);
-                sessionService.update(session);
-            } else {
-                previousQuestion = nextMenus.get(0).getParentMenu().getQuestion();
-                nextQuestion = nextMenus.get(0).getQuestion();
-                LOGGER.info("QuestionType.LIST else nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            }
-        } else if (nextMenus.get(0).getQuestionType().equals(QuestionType.DYNAMIC_LIST)) {
-            ussdMessage = this.formatMenu(session.getLastInput() + UTKit.JOINER + ussdRequest.getInput(), nextMenus);
-            leaf = nextMenus.get(0).getLeaf();
-            if (nextMenus.get(0).getParentMenu().getQuestionType().equals(QuestionType.LIST)) {
-                parentMenu = currentMenu.getParentMenu();
-                LOGGER.info("nextMenus.get(0).getQuestionType().equals(QuestionType.DYNAMIC_LIST) parenMenu {}", parentMenu);
-                parentSiblings = menuService.getNextMenus(parentMenu);
-                for (UssdMenu siblings : parentSiblings) {
-                    LOGGER.info("Siblings question {}, title {}", siblings.getQuestion(), siblings.getTitleKin());
-                }
-                previousQuestion = parentMenu.getQuestion();
-                nextQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getQuestion();
-                LOGGER.info("QuestionType.DYNAMIC_LIST QuestionType.LIST nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            } else {
-                previousQuestion = nextMenus.get(0).getParentMenu().getQuestion();
-                nextQuestion = nextMenus.get(0).getQuestion();
-                LOGGER.info("QuestionType.DYNAMIC_LIST else nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            }
-        } else {
-            ussdMessage = nextMenus.get(0).getTitleKin();
-            leaf = nextMenus.get(0).getLeaf();
-            if (nextMenus.get(0).getParentMenu().getQuestionType().equals(QuestionType.LIST)) {
-                parentMenu = currentMenu.getParentMenu();
-                LOGGER.info("else parenMenu {}", parentMenu);
-                parentSiblings = menuService.getNextMenus(parentMenu);
-                for (UssdMenu siblings : parentSiblings) {
-                    LOGGER.info("Siblings question {}, title {}", siblings.getQuestion(), siblings.getTitleKin());
-                }
-                previousQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getParentMenu().getQuestion();
-                nextQuestion = parentSiblings.get(Integer.parseInt(ussdRequest.getInput()) - 1).getQuestion();
-                LOGGER.info("else QuestionType.LIST nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            } else {
-                previousQuestion = nextMenus.get(0).getParentMenu().getQuestion();
-                nextQuestion = nextMenus.get(0).getQuestion();
-                LOGGER.info("else else nextQuestion {} input {} ", nextQuestion, ussdRequest.getInput());
-            }
-        }
-
-        if (leaf.equals(true)) {
-            switch (currentMenu.getQuestionnaire()) {
-                case REGISTRATION:
-                    UserAccount userAccount = UTKit.getUserDetailsFromLastInput(ussdRequest.getMsisdn(), session.getLastInput() + UTKit.JOINER + ussdRequest.getInput());
-                    userService.create(userAccount);
-                    break;
-                case ASSOCIATION:
-                    break;
-                case LAND:
-                    break;
-                case HELP:
-                    break;
-                case ACCOUNT:
-                    break;
-                case ACTIVITY:
-                    break;
-                case REPORT:
-                    break;
-                case AIRTIME:
-                    break;
-                case MARKETPLACE:
-                    break;
-            }
-        }
-
-        String lastInput = (session.getLastInput().equals(SHORT_CODE) ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + ussdRequest.getInput());
+        String lastInput = (session.getLastInput().equals(SHORT_CODE) && ussdRequest.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + ussdRequest.getInput());
         session.setLeaf(leaf);
         session.setPreviousQuestion(previousQuestion);
-        session.setQuestion(nextQuestion);
+        session.setQuestion(selectedQuestion);
         session.setLastInput(lastInput);
+        session.setQuestionnaire(nextMenus.get(0).getQuestionnaire());
+        session.setStartService(nextMenus.get(0).getServiceStart());
         sessionService.update(session);
         response.setFreeflow(leaf);
-        response.setMessage(ussdMessage);
+        response.setMessage(displayMessage);
         return response;
     }
 
@@ -327,6 +218,9 @@ public class NavigationManager implements INavigationManager {
                 listMessage.append(UTKit.EOL);
                 listMessage.append(ListFormatter.formatLocations(locationService.getVillages(locationCode)));
                 break;
+            default:
+                listMessage.append(UTKit.listMenus(menus));
+                break;
         }
 
         return listMessage.toString();
@@ -334,9 +228,10 @@ public class NavigationManager implements INavigationManager {
 
     @Override
     public StringBuilder formatMenu(UssdRequest ussdRequest, List<UssdMenu> menus) {
+        int menuSize = menus.size();
         session = sessionService.getByMsisdn(ussdRequest.getMsisdn());
         StringBuilder listMessage = new StringBuilder();
-        if (menus.size() >= 1 && menus.get(0).getQuestionType() == QuestionType.LIST) {
+        if (menuSize >= 1 && menus.get(0).getQuestionType() == QuestionType.LIST) {
             for (int i = 0; i < menus.size(); i++) {
                 listMessage.append(i + 1);
                 listMessage.append(UTKit.DOT + UTKit.BLANK);

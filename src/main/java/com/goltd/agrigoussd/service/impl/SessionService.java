@@ -28,8 +28,8 @@ public class SessionService implements ISessionService {
     }
 
     @Override
-    public void create(Session session) {
-        sessionRepository.save(session);
+    public Session create(Session session) {
+        return sessionRepository.save(session);
     }
 
     @Override

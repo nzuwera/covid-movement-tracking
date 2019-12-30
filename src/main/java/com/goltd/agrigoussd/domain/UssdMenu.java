@@ -52,6 +52,9 @@ public class UssdMenu extends AbstractEntity {
     @JoinColumn(name = "PARENT_ID",referencedColumnName = "ID")
     private UssdMenu parentMenu;
 
+    @Column(name = "IS_ROOT", nullable = false, columnDefinition = "BOOLEAN default FALSE")
+    private Boolean isRoot;
+
     @OneToMany(mappedBy = "parentMenu", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<UssdMenu> children = new HashSet<>();
@@ -141,6 +144,14 @@ public class UssdMenu extends AbstractEntity {
         this.parentMenu = parentMenu;
     }
 
+    public Boolean getRoot() {
+        return isRoot;
+    }
+
+    public void setRoot(Boolean root) {
+        isRoot = root;
+    }
+
     public Set<UssdMenu> getChildren() {
         return children;
     }
@@ -152,9 +163,9 @@ public class UssdMenu extends AbstractEntity {
     @Override
     public String toString() {
         return "UssdMenu{" +
-                ", titleEng='" + titleEng + '\'' +
+                "titleEng='" + titleEng + '\'' +
                 ", titleKin='" + titleKin + '\'' +
-                ", registration=" + questionnaire +
+                ", questionnaire=" + questionnaire +
                 ", question=" + question +
                 ", isLeaf=" + isLeaf +
                 ", questionType=" + questionType +
@@ -162,6 +173,8 @@ public class UssdMenu extends AbstractEntity {
                 ", priority=" + priority +
                 ", visibility=" + visibility +
                 ", parentMenu=" + parentMenu +
+                ", isRoot=" + isRoot +
+                ", children=" + children +
                 '}';
     }
 }
