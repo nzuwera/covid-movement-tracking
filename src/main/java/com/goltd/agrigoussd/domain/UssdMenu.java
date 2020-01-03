@@ -1,6 +1,5 @@
 package com.goltd.agrigoussd.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.QuestionType;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
@@ -8,8 +7,6 @@ import com.goltd.agrigoussd.helpers.enums.Visibility;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "USSD_MENU")
@@ -54,10 +51,6 @@ public class UssdMenu extends AbstractEntity {
 
     @Column(name = "IS_ROOT", nullable = false, columnDefinition = "BOOLEAN default FALSE")
     private Boolean isRoot;
-
-    @OneToMany(mappedBy = "parentMenu", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<UssdMenu> children = new HashSet<>();
 
 
     public UssdMenu() {
@@ -152,14 +145,6 @@ public class UssdMenu extends AbstractEntity {
         isRoot = root;
     }
 
-    public Set<UssdMenu> getChildren() {
-        return children;
-    }
-
-    public void setChildren(Set<UssdMenu> children) {
-        this.children = children;
-    }
-
     @Override
     public String toString() {
         return "UssdMenu{" +
@@ -174,7 +159,6 @@ public class UssdMenu extends AbstractEntity {
                 ", visibility=" + visibility +
                 ", parentMenu=" + parentMenu +
                 ", isRoot=" + isRoot +
-                ", children=" + children +
                 '}';
     }
 }
