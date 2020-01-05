@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.UUID;
 
 
 @Table(name = "USER_ACCOUNT", uniqueConstraints = {
@@ -41,7 +42,7 @@ public class UserAccount extends AbstractEntity {
     @Column(name = "VILLAGE_CODE", nullable = false, columnDefinition = "varchar(10) not null")
     private String villageCode;
 
-    @Column(name = "PIN")
+    @Column(name = "PIN", nullable = false, columnDefinition = "varchar(255) not null")
     private String pin;
 
     @Column(name = "IN_ASSOCIATION", columnDefinition = "BOOLEAN DEFAULT FALSE")
@@ -53,6 +54,24 @@ public class UserAccount extends AbstractEntity {
     public UserAccount() {
         // Empty Constructor
     }
+
+    public UserAccount(String msisdn, String lastInput) {
+        String[] userDetails = lastInput.split(UTKit.JOINER);
+        Gender userGender = (userDetails[3].equals("1") ? Gender.MALE : Gender.FEMALE);
+        String userPin = UTKit.securePassword(userDetails[9]);
+        String userVillageCode = userDetails[8];
+
+        this.setId(UUID.randomUUID());
+        this.fullname = userDetails[1];
+        this.age = Integer.parseInt(userDetails[2]);
+        this.gender = userGender;
+        this.accountState = AccountState.PENDING_SUBSCRIPTION;
+        this.villageCode = userVillageCode;
+        this.msisdn = msisdn;
+        this.expireDate = UTKit.setExpiryDate(new Date(), 6);
+        this.pin = userPin;
+    }
+
 
     public String getMsisdn() {
         return msisdn;

@@ -31,5 +31,8 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
     @Query(value = "select l from Location l where l.code = :locationCode and l.type = :locationType")
     List<Location> findLocationsByCodeLikeAndType(@Param("locationCode") String locationCode, @Param("locationType") LocationType locationType);
 
+    @Query(value = "select s from Location l inner join Location s on l.id = s.parentId.id where l.code = :locationCode order by s.code")
+    List<Location> getLocationsByParentIdCode(@Param("locationCode") String locationCode);
+
 
 }

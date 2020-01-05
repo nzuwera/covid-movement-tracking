@@ -1,14 +1,19 @@
 package com.goltd.agrigoussd.service.impl;
 
+import com.goltd.agrigoussd.domain.Location;
 import com.goltd.agrigoussd.domain.Session;
+import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.ResponseObject;
 import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.UssdResponse;
+import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
 import com.goltd.agrigoussd.helpers.enums.Visibility;
+import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
+import com.goltd.agrigoussd.helpers.formatter.ListFormatter;
 import com.goltd.agrigoussd.service.interfaces.*;
 import com.goltd.agrigoussd.validators.QuestionValidator;
 import org.slf4j.Logger;
@@ -86,8 +91,9 @@ public class NavigationManager implements INavigationManager {
     }
 
     @Override
-    public UssdResponse buildMenu(UssdRequest ussdRequest, Session session) {
+    public UssdResponse buildMenu(UssdRequest ussdRequest, Session currentSession) {
         UssdResponse response = new UssdResponse();
+        session = currentSession;
         Question currentQuestion = session.getQuestion();
         UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
         List<UssdMenu> nextMenus = menuService.getNextMenus(currentMenu);
@@ -99,11 +105,10 @@ public class NavigationManager implements INavigationManager {
         Questionnaire questionnaire = responseObject.getQuestionnaire();
 
 
-        String lastInput = (session.getLastInput().equals(SHORT_CODE) && ussdRequest.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + ussdRequest.getInput());
         session.setLeaf(leaf);
         session.setPreviousQuestion(previousQuestion);
         session.setQuestion(selectedQuestion);
-        session.setLastInput(lastInput);
+        session.setLastInput(responseObject.getLastInput());
         session.setQuestionnaire(questionnaire);
         if (Boolean.FALSE.equals(responseObject.getHasError())) {
             sessionService.update(session);
@@ -121,6 +126,10 @@ public class NavigationManager implements INavigationManager {
         List<UssdMenu> nexMenus;
         StringBuilder stringBuilder = new StringBuilder();
         Boolean hasError = false;
+        String currentLocationCode = "RWA";
+        String nextLocationCode = "";
+        List<Location> locations;
+        String lastInput = (session.getLastInput().equals(SHORT_CODE) && request.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + request.getInput());
         leaf = menus.get(0).getLeaf();
         Questionnaire questionnaire = menus.get(0).getQuestionnaire();
         previousQuestion = menus.get(0).getParentMenu().getQuestion();
@@ -129,12 +138,6 @@ public class NavigationManager implements INavigationManager {
             // validate pin
             if (userService.isValidPin(request.getMsisdn(), request.getInput())) {
                 List<UssdMenu> children = menuService.getNextMenus(selectedQuestion);
-                stringBuilder.append(previousQuestion);
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(selectedQuestion);
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(request.getInput());
-                stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(UTKit.listMenus(children));
             } else {
                 hasError = true;
@@ -156,12 +159,6 @@ public class NavigationManager implements INavigationManager {
                 previousQuestion = siblings.get(Integer.parseInt(request.getInput()) - 1).getParentMenu().getQuestion();
                 List<UssdMenu> selectedMenus = menuService.getNextMenus(selectedQuestion);
                 leaf = selectedMenus.get(0).getLeaf();
-                stringBuilder.append(previousQuestion);
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(selectedQuestion);
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(request.getInput());
-                stringBuilder.append(UTKit.EOL);
                 // if question = association show association list
                 // else if question = land show land list
                 if (selectedQuestion == Question.ASSOCIATION_MANAGEMENT_VIEW
@@ -200,8 +197,6 @@ public class NavigationManager implements INavigationManager {
                 hasError = true;
                 stringBuilder.append("Invalid Association Code");
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getTitleKin());
             }
         } else if (selectedQuestion == Question.ASSOCIATIONS_LEAVE_ASSOCIATION) {
@@ -220,11 +215,130 @@ public class NavigationManager implements INavigationManager {
                 hasError = true;
                 stringBuilder.append("Invalid choice");
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getTitleKin());
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(associationService.showAssociation());
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_ENTER_AGE) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            if (QuestionValidator.validateFullName(request.getInput())) {
+                selectedQuestion = menus.get(0).getQuestion();
+                leaf = menus.get(0).getLeaf();
+                stringBuilder.append(currentMenu.getTitleKin());
+            } else {
+                hasError = true;
+                stringBuilder.append("Name must be only letters");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_SELECT_GENDER) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            if (QuestionValidator.validateAge(request.getInput())) {
+                selectedQuestion = menus.get(0).getQuestion();
+                leaf = menus.get(0).getLeaf();
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(EnumFormatter.format(Gender.class));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid age");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_PROVINCE) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            if (QuestionValidator.validateGender(request.getInput())) {
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(currentLocationCode)));
+            } else {
+                hasError = true;
+                stringBuilder.append("Incorrect gender selected");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(EnumFormatter.format(Gender.class));
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_DISTRICT
+                || selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_SECTOR
+                || selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_CELL
+                || selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_VILLAGE) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+
+            if (selectedQuestion != Question.REGISTRATION_SELECT_LOCATION_DISTRICT) { //
+                currentLocationCode = UTKit.getLastInput(session.getLastInput());
+            }
+
+            locations = locationService.getlocationsByParentCode(currentLocationCode);
+
+            if (QuestionValidator.validateLocations(request.getInput(), locations)) {
+                nextLocationCode = locations.get(Integer.parseInt(request.getInput()) - 1).getCode();
+                lastInput = session.getLastInput() + UTKit.JOINER + nextLocationCode;
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(nextLocationCode)));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid location selected");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(currentLocationCode)));
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_ENTER_PIN) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            String cellCode = UTKit.getLastInput(session.getLastInput());
+
+            List<Location> villages = locationService.getlocationsByParentCode(cellCode);
+
+            if (QuestionValidator.validateLocations(request.getInput(), villages)) {
+                String villageCode = villages.get(Integer.parseInt(request.getInput()) - 1).getCode();
+                lastInput = session.getLastInput() + UTKit.JOINER + villageCode;
+                selectedQuestion = menus.get(0).getQuestion();
+                leaf = currentMenu.getLeaf();
+                stringBuilder.append(currentMenu.getTitleKin());
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid Village");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(cellCode)));
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_VERIFY_PIN) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+
+            if (QuestionValidator.validatePinFormat(request.getInput())) {
+                lastInput = session.getLastInput() + UTKit.JOINER + request.getInput();
+                selectedQuestion = menus.get(0).getQuestion();
+                leaf = currentMenu.getLeaf();
+                stringBuilder.append(currentMenu.getTitleKin());
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid PIN format");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+            }
+        } else if (selectedQuestion == Question.REGISTRATION_COMPLETED) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            String pin = UTKit.getLastInput(session.getLastInput());
+            String verifiedPin = request.getInput();
+
+            if (QuestionValidator.validatePinFormat(verifiedPin) && pin.equals(verifiedPin)) {
+                lastInput = session.getLastInput() + UTKit.JOINER + request.getInput();
+                selectedQuestion = menus.get(0).getQuestion();
+                leaf = currentMenu.getLeaf();
+
+                // UserAccount
+                UserAccount userAccount = new UserAccount(request.getMsisdn(), lastInput);
+                userService.create(userAccount);
+                stringBuilder.append(currentMenu.getTitleKin());
+            } else {
+                hasError = true;
+                leaf = false;
+                stringBuilder.append("Invalid PIN format or PIN don't match");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
             }
         } else {
             LOGGER.info("=================== access last else ===================");
@@ -242,6 +356,7 @@ public class NavigationManager implements INavigationManager {
         responseObject.setDisplayMessage(stringBuilder.toString());
         responseObject.setHasError(hasError);
         responseObject.setLeaf(leaf);
+        responseObject.setLastInput(lastInput);
         responseObject.setPreviousQuestion(previousQuestion);
         responseObject.setSelectedQuestion(selectedQuestion);
         responseObject.setQuestionnaire(questionnaire);

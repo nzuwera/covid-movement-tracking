@@ -37,7 +37,7 @@ public class QuestionValidator {
     }
 
     public static Boolean validateLocations(String input, List<Location> locations) {
-        if (validaNumber(input)) {
+        if (validateNumericalString(input)) {
             int selectedInput = Integer.parseInt(input);
             int locationSize = locations.size();
             return selectedInput <= locationSize;
@@ -56,26 +56,24 @@ public class QuestionValidator {
         return Integer.parseInt(string) <= enumLength;
     }
 
-    public static Boolean validatePIN(String pin) {
-        if (pin == null || pin.trim().isEmpty() || pin.length() != 5) {
-            return false;
-        }
-        Pattern p = Pattern.compile(NUMBERS);
-        Matcher m = p.matcher(pin);
-        return !m.find();
+    public static Boolean validatePinFormat(String pin) {
+        return validateNumericalString(pin) && pin.length() == 5;
     }
 
-    public static Boolean validaNumber(String number) {
-        if (number == null || number.trim().isEmpty()) {
+    public static Boolean validateNumericalString(String number) {
+        if (number == null) {
             return false;
         }
-        Pattern p = Pattern.compile(NUMBERS);
-        Matcher m = p.matcher(number);
-        return !m.find();
+        try {
+            Integer.parseInt(number);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
     }
 
     public static boolean validateMenus(String input, List<UssdMenu> previousMenus) {
-        if (validaNumber(input)) {
+        if (validateNumericalString(input)) {
             int selectedInput = Integer.parseInt(input);
             int previousMenusSize = previousMenus.size();
             return selectedInput <= previousMenusSize;

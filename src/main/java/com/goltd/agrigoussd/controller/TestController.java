@@ -1,5 +1,6 @@
 package com.goltd.agrigoussd.controller;
 
+import com.goltd.agrigoussd.domain.Location;
 import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UserAccountDto;
 import com.goltd.agrigoussd.domain.UssdMenu;
@@ -7,6 +8,7 @@ import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.service.interfaces.ILocationService;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
@@ -26,18 +28,29 @@ public class TestController {
     private IMenuService menuService;
     private IUserService userService;
     private ISessionService sessionService;
+    private ILocationService locationService;
 
     @Autowired
-    public TestController(IMenuService menuService, IUserService userService, ISessionService sessionService) {
+    public TestController(IMenuService menuService, IUserService userService, ISessionService sessionService, ILocationService locationService) {
         this.menuService = menuService;
         this.userService = userService;
         this.sessionService = sessionService;
+        this.locationService = locationService;
     }
 
     @GetMapping(value = "/getChildrenByQuestion/{question}")
     public List<UssdMenu> getChildrenByQuestion(@PathVariable String question) {
         try {
             return menuService.getNextMenus(Question.valueOf(question));
+        } catch (EnumConstantNotPresentException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    @GetMapping(value = "/getLocations/{locationCode}")
+    public List<Location> getLocationByCode(@PathVariable String locationCode) {
+        try {
+            return locationService.getlocationsByParentCode(locationCode);
         } catch (EnumConstantNotPresentException e) {
             return new ArrayList<>();
         }

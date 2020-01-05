@@ -10,6 +10,7 @@ public class ResponseObject {
     private Question previousQuestion;
     private String displayMessage;
     private Questionnaire questionnaire;
+    private String lastInput;
 
     public ResponseObject() {
         //
@@ -63,6 +64,14 @@ public class ResponseObject {
         this.questionnaire = questionnaire;
     }
 
+    public String getLastInput() {
+        return lastInput;
+    }
+
+    public void setLastInput(String lastInput) {
+        this.lastInput = lastInput;
+    }
+
     @Override
     public String toString() {
         return "ResponseObject{" +
@@ -72,6 +81,7 @@ public class ResponseObject {
                 ", previousQuestion=" + previousQuestion +
                 ", displayMessage='" + displayMessage + '\'' +
                 ", questionnaire=" + questionnaire +
+                ", lastInput='" + lastInput + '\'' +
                 '}';
     }
 }
