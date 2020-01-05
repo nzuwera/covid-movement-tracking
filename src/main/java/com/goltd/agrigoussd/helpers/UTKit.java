@@ -2,11 +2,9 @@ package com.goltd.agrigoussd.helpers;
 
 import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UssdMenu;
-import com.goltd.agrigoussd.helpers.enums.AccountState;
-import com.goltd.agrigoussd.helpers.enums.BuyerType;
-import com.goltd.agrigoussd.helpers.enums.Gender;
-import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.helpers.enums.*;
 import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +58,7 @@ public class UTKit {
 
     public static String listMenus(List<UssdMenu> menus) {
         StringBuilder menuString = new StringBuilder();
-        if (menus.size() == 1) {
+        if (menus.size() == 1 && menus.get(0).getQuestionType() != QuestionType.LIST) {
             menuString.append(menus.get(0).getTitleKin());
         } else {
             for (int i = 0; i < menus.size(); i++) {
@@ -83,8 +81,6 @@ public class UTKit {
                 break;
             case ACTIVITY_SHOW_CATEGORY:
                 ussdMessage.append(header);
-//                ussdMessage.append(UTKit.EOL);
-//                ussdMessage.append(EnumFormatter.format(ActivityCategory.class));
                 break;
             case ACTIVITY_SHOW_LIST:
                 ussdMessage.append(header);
@@ -101,6 +97,8 @@ public class UTKit {
                 ussdMessage.append(UTKit.EOL);
                 ussdMessage.append(EnumFormatter.format(BuyerType.class));
                 break;
+                default:
+                    break;
         }
         return ussdMessage.toString();
     }
@@ -175,8 +173,11 @@ public class UTKit {
         return (today.getTime() - date.getTime()) >= 5 * 60 * 1000;
     }
 
-    public static int getRandomNumberInRange(int min, int max) {
-        Random r = new Random();
-        return r.nextInt((max - min) + 1) + min;
+    public static Boolean validateAssociationCode(String associationCode) {
+        return !associationCode.isEmpty();
+    }
+
+    public static String securePassword(String value) {
+        return BCrypt.hashpw(value, "$2a$10$5UhI215Wx3NDc.zc9Qb2ge");
     }
 }

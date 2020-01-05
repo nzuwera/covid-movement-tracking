@@ -68,12 +68,14 @@ public class UssdEndpoint {
                 session.setQuestionnaire(Questionnaire.REGISTRATION);
                 session.setPreviousQuestion(Question.REGISTRATION_START);
                 session.setQuestion(Question.REGISTRATION_START);
+                session.setQuestionnaire(Questionnaire.REGISTRATION);
                 session.setStartService(true);
 
             } else {
                 session.setQuestionnaire(Questionnaire.MAIN);
                 session.setPreviousQuestion(Question.MAIN_LOGIN);
                 session.setQuestion(Question.MAIN_LOGIN);
+                session.setQuestionnaire(Questionnaire.MAIN);
                 session.setStartService(false);
             }
             /*
@@ -89,6 +91,9 @@ public class UssdEndpoint {
                 if (currentSession.getLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(currentSession.getTransactionDatetime()))) {
                     sessionService.delete(currentSession);
                     sessionService.create(session);
+                } else {
+                    session = currentSession;
+                    request.setInput(UTKit.getLastInput(session.getLastInput()));
                 }
                 /*
                  * Build next USSD menu
@@ -99,7 +104,6 @@ public class UssdEndpoint {
                 /*
                  * Initialize USSD session
                  */
-                session = sessionService.create(session);
                 ussdResponse = navigationManager.buildMenu(request, session);
                 ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
             }

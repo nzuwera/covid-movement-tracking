@@ -45,12 +45,14 @@ public class TestController {
 
     @GetMapping(value = "/getByParent/{question}")
     public List<UssdMenu> getByParentId(@PathVariable String question) {
+        List<UssdMenu> children;
         try {
             UssdMenu menu = menuService.getByQuestion(Question.valueOf(question));
-            return menuService.getNextMenus(menu);
+            children = menuService.getNextMenus(menu);
         } catch (Exception e) {
-            throw e;
+            children = new ArrayList<>();
         }
+        return children;
     }
 
 

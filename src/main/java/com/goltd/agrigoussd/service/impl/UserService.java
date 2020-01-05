@@ -1,6 +1,7 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.UserAccount;
+import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.repository.UserRepository;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,6 @@ public class UserService implements IUserService {
     @Override
     public Boolean isValidPin(String msisdn, String pin) {
         UserAccount userAccount = userRepository.findByMsisdn(msisdn);
-        return userAccount.getPin().equals(pin);
+        return userAccount.getPin().equals(UTKit.securePassword(pin));
     }
 }

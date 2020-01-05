@@ -1,6 +1,6 @@
 package com.goltd.agrigoussd.domain;
 
-import com.goltd.agrigoussd.helpers.annotations.Encrypted;
+import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -38,12 +38,17 @@ public class UserAccount extends AbstractEntity {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date expireDate;
 
-    @Column(name = "VILLAGE_CODE",nullable =false, columnDefinition = "varchar(10) not null")
+    @Column(name = "VILLAGE_CODE", nullable = false, columnDefinition = "varchar(10) not null")
     private String villageCode;
 
     @Column(name = "PIN")
-    @Encrypted
     private String pin;
+
+    @Column(name = "IN_ASSOCIATION", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean inAssociation;
+
+    @Column(name = "HAS_LAND", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean hasLand;
 
     public UserAccount() {
         // Empty Constructor
@@ -110,19 +115,38 @@ public class UserAccount extends AbstractEntity {
     }
 
     public void setPin(String pin) {
-        this.pin = pin;
+        this.pin = UTKit.securePassword(pin);
+    }
+
+    public Boolean getInAssociation() {
+        return inAssociation;
+    }
+
+    public void setInAssociation(Boolean inAssociation) {
+        this.inAssociation = inAssociation;
+    }
+
+    public Boolean getHasLand() {
+        return hasLand;
+    }
+
+    public void setHasLand(Boolean hasLand) {
+        this.hasLand = hasLand;
     }
 
     @Override
     public String toString() {
         return "UserAccount{" +
-                ", msisdn='" + msisdn + '\'' +
+                "msisdn='" + msisdn + '\'' +
                 ", fullname='" + fullname + '\'' +
                 ", age=" + age +
                 ", gender=" + gender +
                 ", accountState=" + accountState +
                 ", expireDate=" + expireDate +
                 ", villageCode='" + villageCode + '\'' +
+                ", pin='" + pin + '\'' +
+                ", inAssociation=" + inAssociation +
+                ", hasLand=" + hasLand +
                 '}';
     }
 }

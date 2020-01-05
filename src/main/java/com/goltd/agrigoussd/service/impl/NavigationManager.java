@@ -1,15 +1,16 @@
 package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.Session;
-import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UssdMenu;
+import com.goltd.agrigoussd.helpers.ResponseObject;
 import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
 import com.goltd.agrigoussd.helpers.UssdResponse;
-import com.goltd.agrigoussd.helpers.enums.*;
-import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
-import com.goltd.agrigoussd.helpers.formatter.ListFormatter;
+import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.helpers.enums.Questionnaire;
+import com.goltd.agrigoussd.helpers.enums.Visibility;
 import com.goltd.agrigoussd.service.interfaces.*;
+import com.goltd.agrigoussd.validators.QuestionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,88 +28,21 @@ public class NavigationManager implements INavigationManager {
     private IMenuService menuService;
     private ILocationService locationService;
     private IUserService userService;
+    private AssociationService associationService;
 
     @Autowired
-    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService) {
+    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService, AssociationService associationService) {
         this.sessionService = sessionService;
         this.menuService = menuService;
         this.locationService = locationService;
         this.userService = userService;
+        this.associationService = associationService;
     }
 
     private Session session;
     private Question previousQuestion;
     private Question selectedQuestion;
     private Boolean leaf;
-
-    @Override
-    public Session forward(Session session, UssdRequest request) {
-
-        QuestionType questionType;
-        UssdMenu selectedMenu;
-        List<UssdMenu> nextMenus;
-
-        /*
-         * Get Current Session
-         */
-        Question currentQuestion = session.getQuestion();
-        UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
-        LOGGER.info("currentQuestion {}", currentQuestion);
-        previousQuestion = session.getPreviousQuestion();
-        /*
-         * Get Previous Menu
-         * Get Parent Menu
-         */
-        List<UssdMenu> previousMenus = menuService.getNextMenus(currentQuestion);
-        questionType = currentMenu.getQuestionType();
-        LOGGER.info("questionType {}", questionType);
-        LOGGER.info("previousMenus {}", previousMenus);
-        if (questionType == QuestionType.LIST) {
-            // Check if children is not list
-            currentMenu = menuService.getByQuestion(currentQuestion);
-            if (menuService.getNextMenus(currentMenu).get(0).getQuestionType() == QuestionType.LIST) {
-                selectedMenu = previousMenus.get(Integer.parseInt(request.getInput()) - 1);
-                LOGGER.info("selectedMenu {}", selectedMenu);
-                nextMenus = menuService.getNextMenus(selectedMenu);
-                LOGGER.info("nextMenus {}", nextMenus);
-                selectedQuestion = nextMenus.get(0).getQuestion();
-                leaf = nextMenus.get(0).getLeaf();
-            } else {
-                LOGGER.info("questionType {}", questionType);
-                nextMenus = menuService.getNextMenus(currentQuestion);
-                LOGGER.info("nextMenus {}", nextMenus.get(0).getTitleKin());
-                selectedQuestion = nextMenus.get(0).getQuestion();
-                leaf = nextMenus.get(0).getLeaf();
-            }
-        } else if (questionType == QuestionType.DYNAMIC_LIST) {
-            selectedMenu = menuService.getByQuestion(currentQuestion);
-            nextMenus = menuService.getNextMenus(selectedMenu.getQuestion());
-            selectedQuestion = nextMenus.get(0).getQuestion();
-            leaf = nextMenus.get(0).getLeaf();
-        } else if (questionType == QuestionType.ENUM || questionType == QuestionType.MESSAGE || questionType == QuestionType.FORM_INPUT) {
-
-            if (previousMenus.get(0).getQuestionType() == QuestionType.LIST) {
-                selectedMenu = previousMenus.get(Integer.parseInt(request.getInput()) - 1);
-                nextMenus = menuService.getNextMenus(selectedMenu.getParentMenu());
-                selectedQuestion = nextMenus.get(Integer.parseInt(request.getInput()) - 1).getQuestion();
-                leaf = nextMenus.get(Integer.parseInt(request.getInput()) - 1).getLeaf();
-            } else {
-                selectedMenu = menuService.getByQuestion(currentQuestion);
-                nextMenus = menuService.getNextMenus(selectedMenu.getQuestion());
-                selectedQuestion = nextMenus.get(0).getQuestion();
-                leaf = nextMenus.get(0).getLeaf();
-            }
-            LOGGER.info("selectedQuestion {}, Type {}", selectedQuestion, questionType);
-        }
-        /*
-         * Update session
-         */
-        session.setLastInput(session.getLastInput() + UTKit.JOINER + request.getInput());
-        session.setPreviousQuestion(session.getQuestion());
-        session.setQuestion(selectedQuestion);
-        session.setLeaf(leaf);
-        return sessionService.update(session);
-    }
 
     @Override
     public Session backward(UssdRequest ussdRequest) {
@@ -128,10 +62,7 @@ public class NavigationManager implements INavigationManager {
             session.setMsisdn(ussdRequest.getMsisdn());
             session.setPreviousQuestion(parentQuestion);
             session.setQuestion(previousQuestion);
-            LOGGER.info("===== prevState {}", previousQuestion);
         }
-        LOGGER.info("===== prevParentState {}", previousQuestion);
-        LOGGER.info("===== backward session {}", session);
         return sessionService.update(session);
     }
 
@@ -160,10 +91,12 @@ public class NavigationManager implements INavigationManager {
         Question currentQuestion = session.getQuestion();
         UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
         List<UssdMenu> nextMenus = menuService.getNextMenus(currentMenu);
-        selectedQuestion = nextMenus.get(0).getQuestion();
-        previousQuestion = menuService.getByQuestion(selectedQuestion).getParentMenu().getQuestion();
-        leaf = nextMenus.get(0).getLeaf();
-        String displayMessage = UTKit.listMenus(nextMenus);
+        ResponseObject responseObject = this.prepareDisplayMessage(ussdRequest, nextMenus);
+        String displayMessage = responseObject.getDisplayMessage();
+        leaf = responseObject.getLeaf();
+        selectedQuestion = responseObject.getSelectedQuestion();
+        previousQuestion = responseObject.getPreviousQuestion();
+        Questionnaire questionnaire = responseObject.getQuestionnaire();
 
 
         String lastInput = (session.getLastInput().equals(SHORT_CODE) && ussdRequest.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + ussdRequest.getInput());
@@ -171,108 +104,154 @@ public class NavigationManager implements INavigationManager {
         session.setPreviousQuestion(previousQuestion);
         session.setQuestion(selectedQuestion);
         session.setLastInput(lastInput);
-        session.setQuestionnaire(nextMenus.get(0).getQuestionnaire());
-        session.setStartService(nextMenus.get(0).getServiceStart());
-        sessionService.update(session);
+        session.setQuestionnaire(questionnaire);
+        if (Boolean.FALSE.equals(responseObject.getHasError())) {
+            sessionService.update(session);
+        }
         response.setFreeflow(leaf);
         response.setMessage(displayMessage);
         return response;
     }
 
     @Override
-    public String formatMenu(String input, List<UssdMenu> menus) {
-        StringBuilder listMessage = new StringBuilder();
-        String locationCode = null;
-        switch (menus.get(0).getQuestion()) {
-            case REGISTRATION_SELECT_GENDER:
-                listMessage.append(menus.get(0).getTitleKin());
-                listMessage.append(UTKit.EOL);
-                listMessage.append(EnumFormatter.format(Gender.class));
-                break;
-            case REGISTRATION_SELECT_LOCATION_PROVINCE:
-                listMessage.append(menus.get(0).getTitleKin());
-                listMessage.append(UTKit.EOL);
-                listMessage.append(ListFormatter.formatLocations(locationService.getProvinces()));
-                break;
-            case REGISTRATION_SELECT_LOCATION_DISTRICT:
-                locationCode = UTKit.getLocationCode(input, "province");
-                listMessage.append(menus.get(0).getTitleKin());
-                listMessage.append(UTKit.EOL);
-                listMessage.append(ListFormatter.formatLocations(locationService.getDistricts(locationCode)));
-                break;
-            case REGISTRATION_SELECT_LOCATION_SECTOR:
-                locationCode = UTKit.getLocationCode(input, "district");
-                listMessage.append(menus.get(0).getTitleKin());
-                listMessage.append(UTKit.EOL);
-                listMessage.append(ListFormatter.formatLocations(locationService.getSectors(locationCode)));
-                break;
-            case REGISTRATION_SELECT_LOCATION_CELL:
-                locationCode = UTKit.getLocationCode(input, "sector");
-                listMessage.append(menus.get(0).getTitleKin());
-                listMessage.append(UTKit.EOL);
-                listMessage.append(ListFormatter.formatLocations(locationService.getCells(locationCode)));
-                break;
-            case REGISTRATION_SELECT_LOCATION_VILLAGE:
-                locationCode = UTKit.getLocationCode(input, "cell");
-                listMessage.append(menus.get(0).getTitleKin());
-                listMessage.append(UTKit.EOL);
-                listMessage.append(ListFormatter.formatLocations(locationService.getVillages(locationCode)));
-                break;
-            default:
-                listMessage.append(UTKit.listMenus(menus));
-                break;
-        }
+    public ResponseObject prepareDisplayMessage(UssdRequest request, List<UssdMenu> menus) {
+        LOGGER.info("menus {}", menus);
+        UssdMenu currentMenu;
+        List<UssdMenu> siblings;
+        List<UssdMenu> nexMenus;
+        StringBuilder stringBuilder = new StringBuilder();
+        Boolean hasError = false;
+        leaf = menus.get(0).getLeaf();
+        Questionnaire questionnaire = menus.get(0).getQuestionnaire();
+        previousQuestion = menus.get(0).getParentMenu().getQuestion();
+        selectedQuestion = menus.get(0).getQuestion();
+        if (selectedQuestion == Question.MAIN_SELECT_SERVICE) {
+            // validate pin
+            if (userService.isValidPin(request.getMsisdn(), request.getInput())) {
+                List<UssdMenu> children = menuService.getNextMenus(selectedQuestion);
+                stringBuilder.append(previousQuestion);
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(selectedQuestion);
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(request.getInput());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(UTKit.listMenus(children));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid PIN");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(menus.get(0).getParentMenu().getTitleKin());
+            }
 
-        return listMessage.toString();
-    }
+        } else if (selectedQuestion == Question.MAIN_MENU_ASSOCIATIONS
+                || selectedQuestion == Question.REPORT_MANAGEMENT_SUMMARY_OF_COST
+                || selectedQuestion == Question.LAND_MANAGEMENT_REGISTER_PLOT
+                || selectedQuestion == Question.ASSOCIATION_MANAGEMENT_JOIN) {
 
-    @Override
-    public StringBuilder formatMenu(UssdRequest ussdRequest, List<UssdMenu> menus) {
-        int menuSize = menus.size();
-        session = sessionService.getByMsisdn(ussdRequest.getMsisdn());
-        StringBuilder listMessage = new StringBuilder();
-        if (menuSize >= 1 && menus.get(0).getQuestionType() == QuestionType.LIST) {
-            for (int i = 0; i < menus.size(); i++) {
-                listMessage.append(i + 1);
-                listMessage.append(UTKit.DOT + UTKit.BLANK);
-                listMessage.append(menus.get(i).getTitleKin());
-                listMessage.append(UTKit.EOL);
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            siblings = menuService.getNextMenus(currentMenu.getParentMenu());
+            // validate user choice
+            if (QuestionValidator.validateMenus(request.getInput(), siblings)) {
+                selectedQuestion = siblings.get(Integer.parseInt(request.getInput()) - 1).getQuestion();
+                previousQuestion = siblings.get(Integer.parseInt(request.getInput()) - 1).getParentMenu().getQuestion();
+                List<UssdMenu> selectedMenus = menuService.getNextMenus(selectedQuestion);
+                leaf = selectedMenus.get(0).getLeaf();
+                stringBuilder.append(previousQuestion);
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(selectedQuestion);
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(request.getInput());
+                stringBuilder.append(UTKit.EOL);
+                // if question = association show association list
+                // else if question = land show land list
+                if (selectedQuestion == Question.ASSOCIATION_MANAGEMENT_VIEW
+                        || selectedQuestion == Question.ASSOCIATION_MANAGEMENT_LEAVE) {
+                    stringBuilder.append(UTKit.listMenus(selectedMenus));
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(associationService.showAssociation());
+                } else {
+                    stringBuilder.append(UTKit.listMenus(selectedMenus));
+                }
+
+
+                LOGGER.info("List of things {}", stringBuilder);
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid Input");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(UTKit.listMenus(siblings));
+            }
+        } else if (selectedQuestion == Question.ASSOCIATIONS_ENTER_ASSOCIATION_CODE) {
+            // validate association code
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (UTKit.validateAssociationCode(request.getInput())) {
+                selectedQuestion = nexMenus.get(0).getQuestion();
+                previousQuestion = nexMenus.get(0).getParentMenu().getQuestion();
+                leaf = nexMenus.get(0).getLeaf();
+                String associationCode = request.getInput();
+                // API to check if association exists or not
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(associationService.joinAssociation(associationCode));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid Association Code");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.ASSOCIATIONS_LEAVE_ASSOCIATION) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (Integer.parseInt(request.getInput()) <= associationService.getAssociations().length) { // check if input is among association list
+                selectedQuestion = nexMenus.get(0).getQuestion();
+                previousQuestion = nexMenus.get(0).getParentMenu().getQuestion();
+                leaf = nexMenus.get(0).getLeaf();
+                String deletedAssociation = request.getInput(); // this is input which is <= association length
+                // API to check if association exists or not
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(associationService.deleteAssociation(deletedAssociation));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid choice");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(associationService.showAssociation());
             }
         } else {
-            switch (menus.get(0).getQuestion()) {
-                case REGISTRATION_ENTER_PIN:
-                    listMessage.append(menus.get(0).getTitleKin());
-                    break;
-                case REGISTRATION_VERIFY_PIN:
-                    listMessage.append(menus.get(0).getTitleKin());
-                    break;
-                case REGISTRATION_COMPLETED:
-                    String lastInput = session.getLastInput();
-                    UserAccount userAccount = UTKit.getUserDetailsFromLastInput(ussdRequest.getMsisdn(), lastInput);
-                    try {
-                        userService.create(userAccount);
-                        listMessage.append(menus.get(0).getTitleKin());
-                    } catch (Exception ex) {
-                        listMessage.append("Registration failed: ");
-                    }
-                    break;
-                default:
-                    listMessage.append(menus.get(0).getTitleKin());
-                    break;
-            }
+            LOGGER.info("=================== access last else ===================");
+            selectedQuestion = menus.get(0).getQuestion();
+            leaf = menus.get(0).getLeaf();
+            stringBuilder.append(previousQuestion);
+            stringBuilder.append(UTKit.EOL);
+            stringBuilder.append(selectedQuestion);
+            stringBuilder.append(UTKit.EOL);
+            stringBuilder.append(request.getInput());
+            stringBuilder.append(UTKit.EOL);
+            stringBuilder.append(UTKit.listMenus(menus));
         }
-        return listMessage;
+        ResponseObject responseObject = new ResponseObject();
+        responseObject.setDisplayMessage(stringBuilder.toString());
+        responseObject.setHasError(hasError);
+        responseObject.setLeaf(leaf);
+        responseObject.setPreviousQuestion(previousQuestion);
+        responseObject.setSelectedQuestion(selectedQuestion);
+        responseObject.setQuestionnaire(questionnaire);
+        LOGGER.info("responseObject {}", responseObject);
+        return responseObject;
     }
 
     @Override
     public String sendUssdResponse(UssdResponse ussdResponse, HttpServletResponse httpServletResponse) {
         httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, ussdResponse.getFreeflow().name());
         return ussdResponse.getMessage();
-    }
-
-
-    @Override
-    public String traverseForward(Session session, UssdRequest request) {
-        return null;
     }
 }
