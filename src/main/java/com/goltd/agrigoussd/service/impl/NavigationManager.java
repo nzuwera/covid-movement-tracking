@@ -34,14 +34,16 @@ public class NavigationManager implements INavigationManager {
     private ILocationService locationService;
     private IUserService userService;
     private AssociationService associationService;
+    private LandService landService;
 
     @Autowired
-    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService, AssociationService associationService) {
+    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService, AssociationService associationService, LandService landService) {
         this.sessionService = sessionService;
         this.menuService = menuService;
         this.locationService = locationService;
         this.userService = userService;
         this.associationService = associationService;
+        this.landService = landService;
     }
 
     private Session session;
@@ -166,7 +168,18 @@ public class NavigationManager implements INavigationManager {
                     stringBuilder.append(UTKit.listMenus(selectedMenus));
                     stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(associationService.showAssociation());
+                } else if (selectedQuestion == Question.LAND_MANAGEMENT_CROP_ALLOCATION
+                        || selectedQuestion == Question.LAND_MANAGEMENT_VIEW_PLOTS) {
+                    stringBuilder.append(UTKit.listMenus(selectedMenus));
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(landService.formatStringList(landService.getLands()));
                 } else {
+                    stringBuilder.append(previousQuestion);
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(selectedQuestion);
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(request.getInput());
+                    stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(UTKit.listMenus(selectedMenus));
                 }
 
@@ -221,7 +234,7 @@ public class NavigationManager implements INavigationManager {
             }
         } else if (selectedQuestion == Question.REGISTRATION_ENTER_AGE) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
-            if (QuestionValidator.validateFullName(request.getInput())) {
+            if (QuestionValidator.validateStringWord(request.getInput())) {
                 selectedQuestion = menus.get(0).getQuestion();
                 leaf = menus.get(0).getLeaf();
                 stringBuilder.append(currentMenu.getTitleKin());
@@ -340,7 +353,113 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
             }
-        } else {
+        } else if (selectedQuestion == Question.LAND_PLOT_SIZE) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            previousQuestion = currentMenu.getParentMenu().getQuestion();
+            nexMenus = menuService.getNextMenus(currentMenu);
+            // validate plot size
+            if (QuestionValidator.validateNumericalString(request.getInput()) && Integer.parseInt(request.getInput()) > 0) {
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                leaf = false;
+                stringBuilder.append("Plot size must great than 0");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+            }
+        } else if (selectedQuestion == Question.LAND_PLOT_UPI) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            previousQuestion = currentMenu.getParentMenu().getQuestion();
+            nexMenus = menuService.getNextMenus(currentMenu);
+            // validate plot size
+            if (QuestionValidator.validateUPIFormat(request.getInput())) {
+                locations = locationService.getlocationsByParentCode(currentLocationCode);
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locations));
+            } else {
+                hasError = true;
+                leaf = false;
+                stringBuilder.append("Invalid UPI,... x/xx/xx/xx/xxxx");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+            }
+        } else if (selectedQuestion == Question.LAND_LOCATION_PROVINCE
+                || selectedQuestion == Question.LAND_LOCATION_DISTRICT
+                || selectedQuestion == Question.LAND_LOCATION_SECTOR
+                || selectedQuestion == Question.LAND_LOCATION_CELL) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            previousQuestion = currentMenu.getParentMenu().getQuestion();
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (selectedQuestion != Question.LAND_LOCATION_PROVINCE) {
+                currentLocationCode = UTKit.getLastInput(session.getLastInput());
+            }
+            locations = locationService.getlocationsByParentCode(currentLocationCode);
+            // validate plot size
+            if (QuestionValidator.validateLocations(request.getInput(), locations)) {
+                nextLocationCode = locations.get(Integer.parseInt(request.getInput()) - 1).getCode();
+                lastInput = session.getLastInput() + UTKit.JOINER + nextLocationCode;
+                leaf = nexMenus.get(0).getLeaf();
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(nextLocationCode)));
+            } else {
+                hasError = true;
+                leaf = false;
+                stringBuilder.append("Invalid location");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(locationService.getlocationsByParentCode(currentLocationCode));
+            }
+        } else if (selectedQuestion == Question.LAND_LOCATION_VILLAGE) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            currentLocationCode = UTKit.getLastInput(session.getLastInput());
+
+            locations = locationService.getlocationsByParentCode(currentLocationCode);
+
+            if (QuestionValidator.validateLocations(request.getInput(), locations)) {
+                nexMenus = menuService.getNextMenus(currentMenu);
+                nextLocationCode = locations.get(Integer.parseInt(request.getInput()) - 1).getCode();
+                lastInput = session.getLastInput() + UTKit.JOINER + nextLocationCode;
+                selectedQuestion = nexMenus.get(0).getQuestion();
+                leaf = nexMenus.get(0).getLeaf();
+                // call API register land and handle network related issues
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid location");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(currentLocationCode)));
+            }
+        } else if (selectedQuestion == Question.LAND_CROP_SELECT_PLOT) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (landService.isValideLand(request.getInput(),landService.getLands())) {
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid Plot");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if ( selectedQuestion == Question.LAND_CROP_TYPE_OF_CROP
+                || selectedQuestion == Question.LAND_CROP_NAME_OF_CROP
+                || selectedQuestion == Question.LAND_CROP_SEED) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (QuestionValidator.validateStringWord(request.getInput())) {
+                leaf = nexMenus.get(0).getLeaf();
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid input, only string allowed");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        }else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
             leaf = menus.get(0).getLeaf();

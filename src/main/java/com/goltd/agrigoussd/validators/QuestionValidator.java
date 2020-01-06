@@ -6,8 +6,6 @@ import com.goltd.agrigoussd.helpers.enums.Gender;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class QuestionValidator {
@@ -15,25 +13,17 @@ public class QuestionValidator {
         //
     }
 
-    private static final String NUMBERS = "[^0-9]";
-    private static final String LETTERS = "[^A-Za-z ]";
+    private static final String NUMBERS = "^[0-9]+$";
+    private static final String PIN = "^\\d{5}$";
+    private static final String LETTERS = "^[A-Za-z ]{3,}$";
+    private static final String UPI_FORMAT = "^\\d{1}\\/\\d{2}\\/\\d{2}\\/\\d{2}\\/\\d{4,}$";
 
-    public static Boolean validateFullName(String fullName) {
-        if (fullName == null || fullName.trim().isEmpty()) {
-            return false;
-        }
-        Pattern p = Pattern.compile(LETTERS);
-        Matcher m = p.matcher(fullName);
-        return !m.find();
+    public static Boolean validateStringWord(String fullName) {
+        return fullName.matches(LETTERS);
     }
 
     public static Boolean validateAge(String age) {
-        if (age == null || age.trim().isEmpty() || Integer.parseInt(age) <= 18) {
-            return false;
-        }
-        Pattern p = Pattern.compile(NUMBERS);
-        Matcher m = p.matcher(age);
-        return !m.find();
+        return age.matches(NUMBERS) && Integer.parseInt(age) >= 18;
     }
 
     public static Boolean validateLocations(String input, List<Location> locations) {
@@ -57,19 +47,11 @@ public class QuestionValidator {
     }
 
     public static Boolean validatePinFormat(String pin) {
-        return validateNumericalString(pin) && pin.length() == 5;
+        return pin.matches(PIN);
     }
 
     public static Boolean validateNumericalString(String number) {
-        if (number == null) {
-            return false;
-        }
-        try {
-            Integer.parseInt(number);
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
+        return number.matches(NUMBERS);
     }
 
     public static boolean validateMenus(String input, List<UssdMenu> previousMenus) {
@@ -79,5 +61,9 @@ public class QuestionValidator {
             return selectedInput <= previousMenusSize;
         }
         return false;
+    }
+
+    public static boolean validateUPIFormat(String upiNumber){
+        return upiNumber.matches(UPI_FORMAT);
     }
 }
