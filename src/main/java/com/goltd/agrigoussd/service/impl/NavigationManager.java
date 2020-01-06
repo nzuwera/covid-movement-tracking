@@ -188,12 +188,6 @@ public class NavigationManager implements INavigationManager {
                     leaf = true;
                     stringBuilder.append("Coming soon");
                 } else {
-                    stringBuilder.append(previousQuestion);
-                    stringBuilder.append(UTKit.EOL);
-                    stringBuilder.append(selectedQuestion);
-                    stringBuilder.append(UTKit.EOL);
-                    stringBuilder.append(request.getInput());
-                    stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(UTKit.listMenus(selectedMenus));
                 }
 
@@ -582,12 +576,6 @@ public class NavigationManager implements INavigationManager {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
             leaf = menus.get(0).getLeaf();
-            stringBuilder.append(previousQuestion);
-            stringBuilder.append(UTKit.EOL);
-            stringBuilder.append(selectedQuestion);
-            stringBuilder.append(UTKit.EOL);
-            stringBuilder.append(request.getInput());
-            stringBuilder.append(UTKit.EOL);
             stringBuilder.append(UTKit.listMenus(menus));
         }
         ResponseObject responseObject = new ResponseObject();
