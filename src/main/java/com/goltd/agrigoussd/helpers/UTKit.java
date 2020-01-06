@@ -92,7 +92,7 @@ public class UTKit {
                 ussdMessage.append(UTKit.EOL);
                 ussdMessage.append("Marketplace product list is missing");
                 break;
-            case AIRTIME_BUYER_TYPE:
+            case AIRTIME_BUYER_MSISDN:
                 ussdMessage.append(header);
                 ussdMessage.append(UTKit.EOL);
                 ussdMessage.append(EnumFormatter.format(BuyerType.class));

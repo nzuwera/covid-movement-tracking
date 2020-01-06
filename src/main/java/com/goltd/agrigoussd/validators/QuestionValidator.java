@@ -14,6 +14,7 @@ public class QuestionValidator {
     }
 
     private static final String NUMBERS = "^[0-9]+$";
+    private static final String MTN_PHONE = "^078\\d{7}";
     private static final String PIN = "^\\d{5}$";
     private static final String LETTERS = "^[A-Za-z ]{3,}$";
     private static final String UPI_FORMAT = "^\\d{1}\\/\\d{2}\\/\\d{2}\\/\\d{2}\\/\\d{4,}$";
@@ -65,5 +66,8 @@ public class QuestionValidator {
 
     public static boolean validateUPIFormat(String upiNumber){
         return upiNumber.matches(UPI_FORMAT);
+    }
+    public static boolean validateMtnPhone(String phoneNumber){
+        return phoneNumber.matches(MTN_PHONE);
     }
 }

@@ -35,15 +35,17 @@ public class NavigationManager implements INavigationManager {
     private IUserService userService;
     private AssociationService associationService;
     private LandService landService;
+    private ActivityService activityService;
 
     @Autowired
-    public NavigationManager(ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService, AssociationService associationService, LandService landService) {
+    public NavigationManager(ActivityService activityService, ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService, AssociationService associationService, LandService landService) {
         this.sessionService = sessionService;
         this.menuService = menuService;
         this.locationService = locationService;
         this.userService = userService;
         this.associationService = associationService;
         this.landService = landService;
+        this.activityService = activityService;
     }
 
     private Session session;
@@ -151,7 +153,8 @@ public class NavigationManager implements INavigationManager {
         } else if (selectedQuestion == Question.MAIN_MENU_ASSOCIATIONS
                 || selectedQuestion == Question.REPORT_MANAGEMENT_SUMMARY_OF_COST
                 || selectedQuestion == Question.LAND_MANAGEMENT_REGISTER_PLOT
-                || selectedQuestion == Question.ASSOCIATION_MANAGEMENT_JOIN) {
+                || selectedQuestion == Question.ASSOCIATION_MANAGEMENT_JOIN
+                || selectedQuestion == Question.ACCOUNT_RESET_PIN) {
 
             currentMenu = menuService.getByQuestion(selectedQuestion);
             siblings = menuService.getNextMenus(currentMenu.getParentMenu());
@@ -173,6 +176,17 @@ public class NavigationManager implements INavigationManager {
                     stringBuilder.append(UTKit.listMenus(selectedMenus));
                     stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(landService.formatStringList(landService.getLands()));
+                } else if (selectedQuestion == Question.MAIN_MENU_ACTIVITY_RECORDING) {
+                    stringBuilder.append(UTKit.listMenus(selectedMenus));
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(activityService.showCategories());
+                } else if (selectedQuestion == Question.REPORT_MANAGEMENT_LAST_RECORDED_ACTIVITY) {
+                    stringBuilder.append(UTKit.listMenus(selectedMenus));
+                } else if (selectedQuestion == Question.REPORT_MANAGEMENT_PREDICTED_HARVEST) {
+                    stringBuilder.append(UTKit.listMenus(selectedMenus));
+                } else if (selectedQuestion == Question.MAIN_MENU_MARKETPLACE) {
+                    leaf = true;
+                    stringBuilder.append("Coming soon");
                 } else {
                     stringBuilder.append(previousQuestion);
                     stringBuilder.append(UTKit.EOL);
@@ -437,7 +451,7 @@ public class NavigationManager implements INavigationManager {
         } else if (selectedQuestion == Question.LAND_CROP_SELECT_PLOT) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
             nexMenus = menuService.getNextMenus(currentMenu);
-            if (landService.isValideLand(request.getInput(),landService.getLands())) {
+            if (landService.isValideLand(request.getInput(), landService.getLands())) {
                 stringBuilder.append(UTKit.listMenus(nexMenus));
             } else {
                 hasError = true;
@@ -445,7 +459,7 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getTitleKin());
             }
-        } else if ( selectedQuestion == Question.LAND_CROP_TYPE_OF_CROP
+        } else if (selectedQuestion == Question.LAND_CROP_TYPE_OF_CROP
                 || selectedQuestion == Question.LAND_CROP_NAME_OF_CROP
                 || selectedQuestion == Question.LAND_CROP_SEED) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
@@ -459,7 +473,112 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getTitleKin());
             }
-        }else {
+        } else if (selectedQuestion == Question.ACTIVITY_SHOW_CATEGORY) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (activityService.isValideCategory(request.getInput())) {
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(activityService.showActivity(request.getInput()));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid Activity category");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(activityService.showCategories());
+            }
+        } else if (selectedQuestion == Question.ACTIVITY_SHOW_LIST) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            LOGGER.info("activity_show_list lastinput {}", UTKit.getLastInput(session.getLastInput()));
+            if (activityService.isValidaActivity(UTKit.getLastInput(session.getLastInput()), request.getInput())) {
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid Activity List");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(activityService.showActivity(UTKit.getLastInput(session.getLastInput())));
+            }
+        } else if (selectedQuestion == Question.ACTIVITY_QUANTITY
+                || selectedQuestion == Question.ACTIVITY_COST_PER_UNIT
+                || selectedQuestion == Question.AIRTIME_AMOUNT) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (QuestionValidator.validateNumericalString(request.getInput())) {
+                leaf = nexMenus.get(0).getLeaf();
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid input, only numeric allowed");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.AIRTIME_BUYER_MSISDN) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (QuestionValidator.validateMtnPhone(request.getInput())) {
+                leaf = nexMenus.get(0).getLeaf();
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid phone number... 078XXXXXXX");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.ACCOUNT_CURRENT_PIN) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (userService.isValidPin(request.getMsisdn(), request.getInput())) {
+                leaf = nexMenus.get(0).getLeaf();
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid current pin");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.ACCOUNT_NEW_PIN) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (QuestionValidator.validatePinFormat(request.getInput())) {
+                lastInput = session.getLastInput() + UTKit.JOINER + request.getInput();
+                selectedQuestion = menus.get(0).getQuestion();
+                leaf = currentMenu.getLeaf();
+                stringBuilder.append(UTKit.listMenus(nexMenus));
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid PIN format");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
+            }
+        } else if (selectedQuestion == Question.ACCOUNT_REPEAT_NEW_PIN) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            String newPin = UTKit.getLastInput(session.getLastInput());
+            String verifiedPin = request.getInput();
+            if (QuestionValidator.validatePinFormat(request.getInput()) && newPin.equals(verifiedPin)) {
+                try {
+                    // updatePin
+                    userService.updatePin(request.getMsisdn(),verifiedPin);
+                    leaf = nexMenus.get(0).getLeaf();
+                    stringBuilder.append(UTKit.listMenus(nexMenus));
+                } catch (Exception ex) {
+                    hasError = true;
+                    LOGGER.error(ex.getMessage());
+                    stringBuilder.append("Error happened while updating user pin");
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(currentMenu.getTitleKin());
+                }
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid pin format or Pin don't matches");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
             leaf = menus.get(0).getLeaf();
