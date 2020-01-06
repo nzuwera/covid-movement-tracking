@@ -1,8 +1,8 @@
 package com.goltd.agrigoussd.domain;
 
+import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.enums.AccountState;
 import com.goltd.agrigoussd.helpers.enums.Gender;
-import org.hibernate.annotations.Type;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -15,13 +15,7 @@ import java.util.UUID;
         @UniqueConstraint(columnNames = "MSISDN", name = "CONSTRAINT_USER_ACCOUNT_MSISDN")
 })
 @Entity
-public class UserAccount {
-
-    @Id
-    @Type(type = "pg-uuid")
-    @NotNull
-    @Column(name = "ID")
-    private UUID id;
+public class UserAccount extends AbstractEntity {
 
     @Column(name = "MSISDN")
     @NotNull
@@ -45,23 +39,39 @@ public class UserAccount {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date expireDate;
 
-    @Column(name = "VILLAGE_CODE",nullable =false, columnDefinition = "varchar(10) not null")
+    @Column(name = "VILLAGE_CODE", nullable = false, columnDefinition = "varchar(10) not null")
     private String villageCode;
 
-    @Column(name = "PIN")
+    @Column(name = "PIN", nullable = false, columnDefinition = "varchar(255) not null")
     private String pin;
+
+    @Column(name = "IN_ASSOCIATION", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean inAssociation;
+
+    @Column(name = "HAS_LAND", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean hasLand;
 
     public UserAccount() {
         // Empty Constructor
     }
 
-    public UUID getId() {
-        return id;
+    public UserAccount(String msisdn, String lastInput) {
+        String[] userDetails = lastInput.split(UTKit.JOINER);
+        Gender userGender = (userDetails[3].equals("1") ? Gender.MALE : Gender.FEMALE);
+        String userPin = UTKit.securePassword(userDetails[9]);
+        String userVillageCode = userDetails[8];
+
+        this.setId(UUID.randomUUID());
+        this.fullname = userDetails[1];
+        this.age = Integer.parseInt(userDetails[2]);
+        this.gender = userGender;
+        this.accountState = AccountState.PENDING_SUBSCRIPTION;
+        this.villageCode = userVillageCode;
+        this.msisdn = msisdn;
+        this.expireDate = UTKit.setExpiryDate(new Date(), 6);
+        this.pin = userPin;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
 
     public String getMsisdn() {
         return msisdn;
@@ -124,20 +134,38 @@ public class UserAccount {
     }
 
     public void setPin(String pin) {
-        this.pin = pin;
+        this.pin = UTKit.securePassword(pin);
+    }
+
+    public Boolean getInAssociation() {
+        return inAssociation;
+    }
+
+    public void setInAssociation(Boolean inAssociation) {
+        this.inAssociation = inAssociation;
+    }
+
+    public Boolean getHasLand() {
+        return hasLand;
+    }
+
+    public void setHasLand(Boolean hasLand) {
+        this.hasLand = hasLand;
     }
 
     @Override
     public String toString() {
         return "UserAccount{" +
-                "id=" + id +
-                ", msisdn='" + msisdn + '\'' +
+                "msisdn='" + msisdn + '\'' +
                 ", fullname='" + fullname + '\'' +
                 ", age=" + age +
                 ", gender=" + gender +
                 ", accountState=" + accountState +
                 ", expireDate=" + expireDate +
                 ", villageCode='" + villageCode + '\'' +
+                ", pin='" + pin + '\'' +
+                ", inAssociation=" + inAssociation +
+                ", hasLand=" + hasLand +
                 '}';
     }
 }

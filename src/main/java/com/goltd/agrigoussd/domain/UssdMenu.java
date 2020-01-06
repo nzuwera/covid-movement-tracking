@@ -1,27 +1,16 @@
 package com.goltd.agrigoussd.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.QuestionType;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
 import com.goltd.agrigoussd.helpers.enums.Visibility;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "USSD_MENU")
-public class UssdMenu {
-
-    @Id
-    @Type(type = "pg-uuid")
-    @NotNull
-    @Column(name = "ID")
-    private UUID id;
+public class UssdMenu extends AbstractEntity {
 
     @Column(name = "TITLE_ENG")
     private String titleEng;
@@ -58,23 +47,14 @@ public class UssdMenu {
 
     @ManyToOne()
     @JoinColumn(name = "PARENT_ID",referencedColumnName = "ID")
-    private UssdMenu parentId;
+    private UssdMenu parentMenu;
 
-    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<UssdMenu> children = new HashSet<>();
+    @Column(name = "IS_ROOT", nullable = false, columnDefinition = "BOOLEAN default FALSE")
+    private Boolean isRoot;
 
 
     public UssdMenu() {
         // Empty constructor
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public String getTitleEng() {
@@ -149,36 +129,36 @@ public class UssdMenu {
         this.visibility = visibility;
     }
 
-    public UssdMenu getParentId() {
-        return parentId;
+    public UssdMenu getParentMenu() {
+        return parentMenu;
     }
 
-    public void setParentId(UssdMenu parentId) {
-        this.parentId = parentId;
+    public void setParentMenu(UssdMenu parentMenu) {
+        this.parentMenu = parentMenu;
     }
 
-    public Set<UssdMenu> getChildren() {
-        return children;
+    public Boolean getRoot() {
+        return isRoot;
     }
 
-    public void setChildren(Set<UssdMenu> children) {
-        this.children = children;
+    public void setRoot(Boolean root) {
+        isRoot = root;
     }
 
     @Override
     public String toString() {
         return "UssdMenu{" +
-                "id=" + id +
-                ", titleEng='" + titleEng + '\'' +
+                "titleEng='" + titleEng + '\'' +
                 ", titleKin='" + titleKin + '\'' +
-                ", registration=" + questionnaire +
+                ", questionnaire=" + questionnaire +
                 ", question=" + question +
                 ", isLeaf=" + isLeaf +
                 ", questionType=" + questionType +
                 ", serviceStart=" + serviceStart +
                 ", priority=" + priority +
                 ", visibility=" + visibility +
-                ", parentId=" + parentId +
+                ", parentMenu=" + parentMenu +
+                ", isRoot=" + isRoot +
                 '}';
     }
 }

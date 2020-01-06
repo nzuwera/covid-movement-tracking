@@ -2,14 +2,14 @@ package com.goltd.agrigoussd.controller;
 
 
 import com.goltd.agrigoussd.domain.Session;
-import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.UTKit;
 import com.goltd.agrigoussd.helpers.UssdRequest;
+import com.goltd.agrigoussd.helpers.UssdResponse;
 import com.goltd.agrigoussd.helpers.enums.Freeflow;
 import com.goltd.agrigoussd.helpers.enums.Question;
 import com.goltd.agrigoussd.helpers.enums.Questionnaire;
-import com.goltd.agrigoussd.questionnaire.QuestionnaireProcessor;
-import com.goltd.agrigoussd.service.interfaces.IMenuService;
+import com.goltd.agrigoussd.helpers.enums.Visibility;
+import com.goltd.agrigoussd.service.interfaces.INavigationManager;
 import com.goltd.agrigoussd.service.interfaces.ISessionService;
 import com.goltd.agrigoussd.service.interfaces.IUserService;
 import org.slf4j.Logger;
@@ -21,128 +21,130 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/ussd")
 public class UssdEndpoint {
 
-    private static final Logger logger = LoggerFactory.getLogger(UssdEndpoint.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(UssdEndpoint.class);
 
     private IUserService userService;
     private ISessionService sessionService;
-    private IMenuService menuService;
-    private QuestionnaireProcessor processor;
+    private INavigationManager navigationManager;
 
     @Autowired
-    public UssdEndpoint(IUserService userService, ISessionService sessionService, IMenuService menuService, QuestionnaireProcessor processor) {
+    public UssdEndpoint(IUserService userService, ISessionService sessionService, INavigationManager navigationManager) {
         this.userService = userService;
         this.sessionService = sessionService;
-        this.menuService = menuService;
-        this.processor = processor;
+        this.navigationManager = navigationManager;
     }
 
-    private String ussdResponse;
-
     @GetMapping(value = "/agrigo")
-    public String getUssdResponse(UssdRequest request, HttpServletResponse httpServletResponse) {
+    public String ussdHandler(UssdRequest request, HttpServletResponse httpResponse) {
 
-        // Initialize session
-        Session session = new Session();
-        session.setId(UUID.randomUUID());
-        session.setLoggedIn(false);
-        session.setMsisdn(request.getMsisdn());
-        session.setLastInput(request.getInput());
-        session.setStartService(false);
-        session.setTransactionDatetime(new Date());
-        session.setLeaf(false);
+        UssdResponse ussdResponse;
+        String ussdMessage;
+        Session session;
+        Session currentSession;
 
-        // Check if user have account
-        if (userService.exists(request.getMsisdn())) {
-            session.setQuestionnaire(Questionnaire.MAIN);
-            session.setQuestion(Question.MAIN_ENTER_PIN);
-            session.setPreviousQuestion(Question.MAIN_ENTER_PIN);
-        } else {
-            session.setQuestionnaire(Questionnaire.REGISTRATION);
-            session.setQuestion(Question.REGISTRATION_ENTER_FULL_NAME);
-            session.setPreviousQuestion(Question.REGISTRATION_ENTER_FULL_NAME);
-        }
+        /*
+         * Check if user has dialed *909# or is continuing an open session
+         */
+        if (request.getNewRequest().equals("1") && request.getInput().startsWith("*") && request.getInput().endsWith("#")) {
+            /*
+             * Set User default language to KIN
+             */
+            session = new Session();
+            session.setId(UUID.randomUUID());
+            session.setMsisdn(request.getMsisdn());
+            session.setLastInput(request.getInput());
+            session.setLeaf(false);
+            session.setLoggedIn(false);
+            session.setTransactionDatetime(new Date());
+            if (Boolean.FALSE.equals(userService.exists(request.getMsisdn()))) {
+                // Start User Registration
+                //
+                session.setQuestionnaire(Questionnaire.REGISTRATION);
+                session.setPreviousQuestion(Question.REGISTRATION_START);
+                session.setQuestion(Question.REGISTRATION_START);
+                session.setQuestionnaire(Questionnaire.REGISTRATION);
+                session.setStartService(true);
 
-        // check if session exists on first request and reset it else initialize
-        if (sessionService.exists(request.getMsisdn())) {
-            httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, Freeflow.FC.name());
-            if (request.getNewRequest().equals("1")) {
-
-                // is Expired delete and initialize else resume
-                if (UTKit.elapsedMinutes(session.getTransactionDatetime()) > 5) {
-                    sessionService.delete(sessionService.getByMsisdn(request.getMsisdn()));
-                    sessionService.create(session);
-
-                    // get the current session
-                    Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
-                    UssdMenu currentMenu = menuService.getByQuestion(currentSession.getQuestion());
-                    ussdResponse = currentMenu.getTitleKin();
-                } else {
-                    // get current session :  previous question and menu
-                    Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
-                    if (Boolean.FALSE.equals(currentSession.getLeaf())) {
-                        Question previousQuestion = currentSession.getQuestion();
-                        UssdMenu previousMenu = menuService.getByQuestion(previousQuestion);
-
-                        // get next menu
-                        List<UssdMenu> nextMenus = menuService.getByParentId(previousMenu);
-                        Question nextQuestion = nextMenus.get(0).getQuestion();
-
-                        // build next
-                        UssdMenu nextMenu = nextMenus.get(0);
-                        ussdResponse = nextMenu.getTitleKin();
-
-                        // save session
-                        currentSession.setPreviousQuestion(previousMenu.getQuestion());
-                        currentSession.setQuestion(nextQuestion);
-                        currentSession.setLastInput(UTKit.getNewBackwardInput(currentSession.getLastInput()));
-                        currentSession.setTransactionDatetime(new Date());
-                        Session updatedSession = sessionService.update(currentSession);
-                        String saveSession = updatedSession.toString();
-                        logger.info(saveSession);
-                    } else {
-                        sessionService.delete(sessionService.getByMsisdn(request.getMsisdn()));
-                        sessionService.create(session);
-
-                        // get the current session
-                        currentSession = sessionService.getByMsisdn(request.getMsisdn());
-                        UssdMenu currentMenu = menuService.getByQuestion(currentSession.getQuestion());
-                        ussdResponse = currentMenu.getTitleKin();
-                    }
-                }
-
-
-            } else if (request.getNewRequest().equals("0")) {
-
-                // get current session :  previous question and menu
-                Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
-
-                // Build next menu
-                ussdResponse = processor.handleQuestionnaire(currentSession, request);
-
-                if (Boolean.FALSE.equals(currentSession.getLeaf())) {
-                    httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, Freeflow.FC.name());
-                } else {
-                    httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, Freeflow.FB.name());
-                }
+            } else {
+                session.setQuestionnaire(Questionnaire.MAIN);
+                session.setPreviousQuestion(Question.MAIN_LOGIN);
+                session.setQuestion(Question.MAIN_LOGIN);
+                session.setQuestionnaire(Questionnaire.MAIN);
+                session.setStartService(false);
             }
-        } else {
-            httpServletResponse.setHeader(UTKit.FREE_FLOW_HEADER, Freeflow.FC.name());
-            sessionService.create(session);
-            // get the current session
-            Session currentSession = sessionService.getByMsisdn(request.getMsisdn());
-            UssdMenu currentMenu = menuService.getByQuestion(currentSession.getQuestion());
-            ussdResponse = currentMenu.getTitleKin();
-        }
+            /*
+             * Check if a ussd session already exists
+             */
+            if (Boolean.TRUE.equals(sessionService.exists(request.getMsisdn()))) {
+                currentSession = sessionService.getByMsisdn(request.getMsisdn());
+                /*
+                 * USSD Session resume:
+                 *  - Must Not be the last menu
+                 *  - Must not have expired
+                 */
+                if (currentSession.getLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(currentSession.getTransactionDatetime()))) {
+                    sessionService.delete(currentSession);
+                    sessionService.create(session);
+                } else {
+                    session = currentSession;
+                    request.setInput(UTKit.getLastInput(session.getLastInput()));
+                }
+                /*
+                 * Build next USSD menu
+                 */
+                ussdResponse = navigationManager.buildMenu(request, session);
+                ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
+            } else {
+                /*
+                 * Initialize USSD session
+                 */
+                ussdResponse = navigationManager.buildMenu(request, session);
+                ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
+            }
+        } else if (request.getNewRequest().equals("0")) {
+            /*
+             * Continue USSD Navigation
+             */
+            session = sessionService.getByMsisdn(request.getMsisdn());
 
-        logger.info(ussdResponse);
-        return ussdResponse;
+            if (request.getInput().equals("0") && !session.getQuestion().equals(Question.MAIN_LOGIN) && !session.getQuestion().equals(Question.REGISTRATION_START)) {
+                /*
+                 * USSD Backward navigation:
+                 * - 0 Go Back
+                 */
+                session = navigationManager.backward(request);
+                ussdResponse = navigationManager.buildMenu(request, session);
+            } else if (request.getInput().equals("99") && !session.getQuestion().equals(Question.MAIN_LOGIN) && !session.getQuestion().equals(Question.REGISTRATION_START)) {
+                /*
+                 * USSD Backward navigation:
+                 * - 99 Go to main menu
+                 */
+                Visibility visibility = (session.getQuestionnaire().equals(Questionnaire.REGISTRATION) ? Visibility.UNREGISTERED : Visibility.REGISTERED);
+                session = navigationManager.toMainMenu(request, visibility);
+                ussdResponse = navigationManager.buildMenu(request, session);
+            } else {
+                /*
+                 * USSD Forward navigation:
+                 *
+                 * Change User's prefered language.
+                 */
+                ussdResponse = navigationManager.buildMenu(request, session);
+            }
+            ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
+
+        } else {
+            ussdMessage = navigationManager.sendUssdResponse(new UssdResponse("General Error: " + request.toString(), Freeflow.FB), httpResponse);
+        }
+        /*
+         * Display USSD Message
+         */
+        LOGGER.info("ussdResponse \n{}", ussdMessage);
+        return ussdMessage;
     }
 }

@@ -10,4 +10,5 @@ public interface IUserService {
     UserAccount getUserByMsisdn(String msisdn);
     Boolean exists(String msisdn);
     Boolean isValidPin(String msisdn, String pin);
+    void updatePin(String msisdn, String pin);
 }

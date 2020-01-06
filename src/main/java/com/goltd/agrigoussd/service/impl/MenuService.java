@@ -2,7 +2,6 @@ package com.goltd.agrigoussd.service.impl;
 
 import com.goltd.agrigoussd.domain.UssdMenu;
 import com.goltd.agrigoussd.helpers.enums.Question;
-import com.goltd.agrigoussd.helpers.enums.Questionnaire;
 import com.goltd.agrigoussd.repository.MenuRepository;
 import com.goltd.agrigoussd.service.interfaces.IMenuService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +25,12 @@ public class MenuService implements IMenuService {
     }
 
     @Override
-    public List<UssdMenu> getByQuestionnaire(Questionnaire questionnaire) {
-        return menuRepository.findByQuestionnaire(questionnaire);
+    public List<UssdMenu> getNextMenus(UssdMenu menu) {
+        return menuRepository.findByParentMenuOrderByPriorityAsc(menu);
     }
 
     @Override
-    public List<UssdMenu> getByParentId(UssdMenu menu) {
-        return menuRepository.findByParentId(menu);
+    public List<UssdMenu> getNextMenus(Question question) {
+        return menuRepository.findUssdMenusByParentMenuQuestionOrderByPriorityAsc(question);
     }
 }

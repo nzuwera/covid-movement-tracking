@@ -27,8 +27,8 @@ public class UssdResponse {
         return freeflow;
     }
 
-    public void setFreeflow(Freeflow freeflow) {
-        this.freeflow = freeflow;
+    public void setFreeflow(Boolean isLeaf) {
+        this.freeflow = (Boolean.TRUE.equals(isLeaf)) ? Freeflow.FB : Freeflow.FC;
     }
 
     @Override

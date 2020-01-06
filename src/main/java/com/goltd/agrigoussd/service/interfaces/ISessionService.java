@@ -8,9 +8,11 @@ public interface ISessionService {
 
     Session getByMsisdn(String msisdn);
 
-    void create(Session session);
+    Session create(Session session);
 
     Session update(Session session);
 
     void delete(Session session);
+
+    Boolean isExpired(Session session);
 }

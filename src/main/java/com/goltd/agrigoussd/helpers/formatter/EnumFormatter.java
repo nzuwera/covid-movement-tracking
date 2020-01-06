@@ -10,14 +10,12 @@ public class EnumFormatter<E extends Enum<E>> {
         //
     }
 
-    public static <E extends Enum<E>> String format(String header, Class<E> enumObject) {
+    public static <E extends Enum<E>> String format(Class<E> enumObject) {
         StringBuilder message = new StringBuilder();
-        message.append(header);
-        message.append(UTKit.EOL);
         int i = 1;
         for (E enumValue : EnumSet.allOf(enumObject)) {
             message.append(i);
-            message.append(". ");
+            message.append(UTKit.DOT + UTKit.BLANK);
             message.append(enumValue.toString());
             message.append(UTKit.EOL);
             i++;
