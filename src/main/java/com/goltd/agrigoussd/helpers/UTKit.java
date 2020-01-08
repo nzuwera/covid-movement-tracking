@@ -1,14 +1,19 @@
 package com.goltd.agrigoussd.helpers;
 
-import com.goltd.agrigoussd.domain.UserAccount;
 import com.goltd.agrigoussd.domain.UssdMenu;
-import com.goltd.agrigoussd.helpers.enums.*;
+import com.goltd.agrigoussd.helpers.enums.BuyerType;
+import com.goltd.agrigoussd.helpers.enums.Gender;
+import com.goltd.agrigoussd.helpers.enums.Question;
+import com.goltd.agrigoussd.helpers.enums.QuestionType;
 import com.goltd.agrigoussd.helpers.formatter.EnumFormatter;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,29 +136,6 @@ public class UTKit {
         }
 
         return locationCode.toString();
-    }
-
-    public static UserAccount getUserDetailsFromLastInput(String msisdn, String lastInput) {
-        UserAccount userAccount = new UserAccount();
-        String[] userDetails = lastInput.split(JOINER);
-        Gender gender = (userDetails[3].equals("1") ? Gender.MALE : Gender.FEMALE);
-        String province = "0" + userDetails[4];
-        String district = (userDetails[5].length() > 1 ? userDetails[5] : "0" + userDetails[5]);
-        String sector = (userDetails[6].length() > 1 ? userDetails[6] : "0" + userDetails[6]);
-        String cell = (userDetails[7].length() > 1 ? userDetails[7] : "0" + userDetails[7]);
-        String village = (userDetails[8].length() > 1 ? userDetails[8] : "0" + userDetails[8]);
-        String villageCode = province + district + sector + cell + village;
-
-        userAccount.setId(UUID.randomUUID());
-        userAccount.setFullname(userDetails[1]);
-        userAccount.setAge(Integer.parseInt(userDetails[2]));
-        userAccount.setGender(gender);
-        userAccount.setAccountState(AccountState.PENDING_SUBSCRIPTION);
-        userAccount.setVillageCode(villageCode);
-        userAccount.setMsisdn(msisdn);
-        userAccount.setExpireDate(setExpiryDate(new Date(), 7));
-        userAccount.setPin(userDetails[9]);
-        return userAccount;
     }
 
     public static boolean validateFullName(String fullName) {

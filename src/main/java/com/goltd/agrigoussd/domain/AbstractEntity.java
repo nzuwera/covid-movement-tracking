@@ -3,18 +3,18 @@ package com.goltd.agrigoussd.domain;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @MappedSuperclass
 public class AbstractEntity {
 
     @Id
+    @GeneratedValue
     @Type(type = "pg-uuid")
-    @NotNull
-    @Column(name = "ID")
+    @Column(name = "ID", unique = true, length = 36)
     private UUID id;
 
     public AbstractEntity() {

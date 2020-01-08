@@ -2,13 +2,10 @@ package com.goltd.agrigoussd.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goltd.agrigoussd.helpers.enums.LocationType;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.util.List;
-import java.util.UUID;
 
 
 @Entity
@@ -22,13 +19,7 @@ import java.util.UUID;
                 @UniqueConstraint(columnNames = "CODE", name = "CONSTRAINT_LOCATION_CODE"),
                 @UniqueConstraint(columnNames = {"NAME", "PARENT_ID"}, name = "CONSTRAINT_LOCATION_NAME_AND_PARENT_ID")
         })
-public class Location {
-    @NotNull
-    @Id
-    @Column(name = "ID", nullable = false)
-    @Type(type = "pg-uuid")
-    private UUID id;
-
+public class Location extends AbstractEntity {
     @Column(name = "STATE", columnDefinition = "integer not null")
     private Integer state;
 
@@ -59,14 +50,6 @@ public class Location {
 
     public Location() {
         // Empty constructor
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public Integer getState() {
@@ -128,7 +111,6 @@ public class Location {
     @Override
     public String toString() {
         return "Location{" +
-                "id=" + id +
                 ", state=" + state +
                 ", version=" + version +
                 ", code='" + code + '\'' +
