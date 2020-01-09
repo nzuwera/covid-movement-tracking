@@ -2,6 +2,7 @@ package rw.centrika.ussd.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.UserAccount;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.repository.UserRepository;
@@ -80,13 +81,12 @@ public class UserService implements IUserService {
      */
     @Override
     public Boolean isValidPin(String msisdn, String pin) {
-        UserAccount userAccount = userRepository.findByMsisdn(msisdn);
-        return userAccount.getPin().equals(UTKit.securePassword(pin));
+       return true;
     }
 
     @Override
     @Transactional
-    public void updatePin(String msisdn, String pin) {
-        userRepository.updatePin(UTKit.securePassword(pin), msisdn);
+    public void updateLanguage(String msisdn, Language language) {
+        userRepository.updateLanguage(language, msisdn);
     }
 }

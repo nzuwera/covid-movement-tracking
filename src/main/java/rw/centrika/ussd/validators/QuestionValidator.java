@@ -1,7 +1,6 @@
 package rw.centrika.ussd.validators;
 
 import org.springframework.stereotype.Service;
-import rw.centrika.ussd.domain.Location;
 import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.enums.Gender;
 
@@ -25,15 +24,6 @@ public class QuestionValidator {
 
     public static Boolean validateAge(String age) {
         return age.matches(NUMBERS) && Integer.parseInt(age) >= 18;
-    }
-
-    public static Boolean validateLocations(String input, List<Location> locations) {
-        if (Boolean.TRUE.equals(validateNumericalString(input))) {
-            int selectedInput = Integer.parseInt(input);
-            int locationSize = locations.size();
-            return selectedInput <= locationSize;
-        }
-        return false;
     }
 
     public static Boolean validateGender(String string) {

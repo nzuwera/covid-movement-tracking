@@ -1,5 +1,6 @@
 package rw.centrika.ussd.service.interfaces;
 
+import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.UserAccount;
 
 public interface IUserService {
@@ -10,5 +11,5 @@ public interface IUserService {
     UserAccount getUserByMsisdn(String msisdn);
     Boolean exists(String msisdn);
     Boolean isValidPin(String msisdn, String pin);
-    void updatePin(String msisdn, String pin);
+    void updateLanguage(String msisdn, Language language);
 }

@@ -4,9 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import rw.centrika.ussd.domain.Location;
 import rw.centrika.ussd.domain.Session;
-import rw.centrika.ussd.domain.UserAccount;
 import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.ResponseObject;
 import rw.centrika.ussd.helpers.UTKit;
@@ -17,8 +15,10 @@ import rw.centrika.ussd.helpers.enums.Question;
 import rw.centrika.ussd.helpers.enums.Questionnaire;
 import rw.centrika.ussd.helpers.enums.Visibility;
 import rw.centrika.ussd.helpers.formatter.EnumFormatter;
-import rw.centrika.ussd.helpers.formatter.ListFormatter;
-import rw.centrika.ussd.service.interfaces.*;
+import rw.centrika.ussd.service.interfaces.IMenuService;
+import rw.centrika.ussd.service.interfaces.INavigationManager;
+import rw.centrika.ussd.service.interfaces.ISessionService;
+import rw.centrika.ussd.service.interfaces.IUserService;
 import rw.centrika.ussd.validators.QuestionValidator;
 
 import javax.servlet.http.HttpServletResponse;
@@ -31,17 +31,15 @@ public class NavigationManager implements INavigationManager {
 
     private ISessionService sessionService;
     private IMenuService menuService;
-    private ILocationService locationService;
     private IUserService userService;
     private AssociationService associationService;
     private LandService landService;
     private ActivityService activityService;
 
     @Autowired
-    public NavigationManager(ActivityService activityService, ISessionService sessionService, IMenuService menuService, ILocationService locationService, IUserService userService, AssociationService associationService, LandService landService) {
+    public NavigationManager(ActivityService activityService, ISessionService sessionService, IMenuService menuService, IUserService userService, AssociationService associationService, LandService landService) {
         this.sessionService = sessionService;
         this.menuService = menuService;
-        this.locationService = locationService;
         this.userService = userService;
         this.associationService = associationService;
         this.landService = landService;
@@ -132,7 +130,7 @@ public class NavigationManager implements INavigationManager {
         Boolean hasError = false;
         String currentLocationCode = "RWA";
         String nextLocationCode = "";
-        List<Location> locations;
+        // List<Location> locations;
         String lastInput = (session.getLastInput().equals(SHORT_CODE) && request.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + request.getInput());
         leaf = menus.get(0).getLeaf();
         Questionnaire questionnaire = menus.get(0).getQuestionnaire();
@@ -266,67 +264,7 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
             }
-        } else if (selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_PROVINCE) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-            if (QuestionValidator.validateGender(request.getInput())) {
-                stringBuilder.append(currentMenu.getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(currentLocationCode)));
-            } else {
-                hasError = true;
-                stringBuilder.append("Incorrect gender selected");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(EnumFormatter.format(Gender.class));
-            }
-        } else if (selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_DISTRICT
-                || selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_SECTOR
-                || selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_CELL
-                || selectedQuestion == Question.REGISTRATION_SELECT_LOCATION_VILLAGE) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-
-            if (selectedQuestion != Question.REGISTRATION_SELECT_LOCATION_DISTRICT) { //
-                currentLocationCode = UTKit.getLastInput(session.getLastInput());
-            }
-
-            locations = locationService.getlocationsByParentCode(currentLocationCode);
-
-            if (QuestionValidator.validateLocations(request.getInput(), locations)) {
-                nextLocationCode = locations.get(Integer.parseInt(request.getInput()) - 1).getCode();
-                lastInput = session.getLastInput() + UTKit.JOINER + nextLocationCode;
-                stringBuilder.append(currentMenu.getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(nextLocationCode)));
-            } else {
-                hasError = true;
-                stringBuilder.append("Invalid location selected");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(currentLocationCode)));
-            }
-        } else if (selectedQuestion == Question.REGISTRATION_ENTER_PIN) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-            String cellCode = UTKit.getLastInput(session.getLastInput());
-
-            List<Location> villages = locationService.getlocationsByParentCode(cellCode);
-
-            if (QuestionValidator.validateLocations(request.getInput(), villages)) {
-                String villageCode = villages.get(Integer.parseInt(request.getInput()) - 1).getCode();
-                lastInput = session.getLastInput() + UTKit.JOINER + villageCode;
-                selectedQuestion = menus.get(0).getQuestion();
-                leaf = currentMenu.getLeaf();
-                stringBuilder.append(currentMenu.getTitleKin());
-            } else {
-                hasError = true;
-                stringBuilder.append("Invalid Village");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(cellCode)));
-            }
-        } else if (selectedQuestion == Question.REGISTRATION_VERIFY_PIN) {
+        }  else if (selectedQuestion == Question.REGISTRATION_VERIFY_PIN) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
 
             if (QuestionValidator.validatePinFormat(request.getInput())) {
@@ -349,10 +287,6 @@ public class NavigationManager implements INavigationManager {
                 lastInput = session.getLastInput() + UTKit.JOINER + request.getInput();
                 selectedQuestion = menus.get(0).getQuestion();
                 leaf = currentMenu.getLeaf();
-
-                // UserAccount
-                UserAccount userAccount = new UserAccount(request.getMsisdn(), lastInput);
-                userService.create(userAccount);
                 stringBuilder.append(currentMenu.getTitleKin());
             } else {
                 hasError = true;
@@ -374,73 +308,6 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append("Plot size must great than 0");
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-            }
-        } else if (selectedQuestion == Question.LAND_PLOT_UPI) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-            previousQuestion = currentMenu.getParentMenu().getQuestion();
-            nexMenus = menuService.getNextMenus(currentMenu);
-            // validate plot size
-            if (QuestionValidator.validateUPIFormat(request.getInput())) {
-                locations = locationService.getlocationsByParentCode(currentLocationCode);
-                stringBuilder.append(UTKit.listMenus(nexMenus));
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locations));
-            } else {
-                hasError = true;
-                leaf = false;
-                stringBuilder.append("Invalid UPI,... x/xx/xx/xx/xxxx");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-            }
-        } else if (selectedQuestion == Question.LAND_LOCATION_PROVINCE
-                || selectedQuestion == Question.LAND_LOCATION_DISTRICT
-                || selectedQuestion == Question.LAND_LOCATION_SECTOR
-                || selectedQuestion == Question.LAND_LOCATION_CELL) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-            previousQuestion = currentMenu.getParentMenu().getQuestion();
-            nexMenus = menuService.getNextMenus(currentMenu);
-            if (selectedQuestion != Question.LAND_LOCATION_PROVINCE) {
-                currentLocationCode = UTKit.getLastInput(session.getLastInput());
-            }
-            locations = locationService.getlocationsByParentCode(currentLocationCode);
-            // validate plot size
-            if (QuestionValidator.validateLocations(request.getInput(), locations)) {
-                nextLocationCode = locations.get(Integer.parseInt(request.getInput()) - 1).getCode();
-                lastInput = session.getLastInput() + UTKit.JOINER + nextLocationCode;
-                leaf = nexMenus.get(0).getLeaf();
-                stringBuilder.append(UTKit.listMenus(nexMenus));
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(nextLocationCode)));
-            } else {
-                hasError = true;
-                leaf = false;
-                stringBuilder.append("Invalid location");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(locationService.getlocationsByParentCode(currentLocationCode));
-            }
-        } else if (selectedQuestion == Question.LAND_LOCATION_VILLAGE) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-            currentLocationCode = UTKit.getLastInput(session.getLastInput());
-
-            locations = locationService.getlocationsByParentCode(currentLocationCode);
-
-            if (QuestionValidator.validateLocations(request.getInput(), locations)) {
-                nexMenus = menuService.getNextMenus(currentMenu);
-                nextLocationCode = locations.get(Integer.parseInt(request.getInput()) - 1).getCode();
-                lastInput = session.getLastInput() + UTKit.JOINER + nextLocationCode;
-                selectedQuestion = nexMenus.get(0).getQuestion();
-                leaf = nexMenus.get(0).getLeaf();
-                // call API register land and handle network related issues
-                stringBuilder.append(UTKit.listMenus(nexMenus));
-            } else {
-                hasError = true;
-                stringBuilder.append("Invalid location");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(ListFormatter.formatLocations(locationService.getlocationsByParentCode(currentLocationCode)));
             }
         } else if (selectedQuestion == Question.LAND_CROP_SELECT_PLOT) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
@@ -548,31 +415,7 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(currentMenu.getParentMenu().getTitleKin());
             }
-        } else if (selectedQuestion == Question.ACCOUNT_REPEAT_NEW_PIN) {
-            currentMenu = menuService.getByQuestion(selectedQuestion);
-            nexMenus = menuService.getNextMenus(currentMenu);
-            String newPin = UTKit.getLastInput(session.getLastInput());
-            String verifiedPin = request.getInput();
-            if (QuestionValidator.validatePinFormat(request.getInput()) && newPin.equals(verifiedPin)) {
-                try {
-                    // updatePin
-                    userService.updatePin(request.getMsisdn(),verifiedPin);
-                    leaf = nexMenus.get(0).getLeaf();
-                    stringBuilder.append(UTKit.listMenus(nexMenus));
-                } catch (Exception ex) {
-                    hasError = true;
-                    LOGGER.error(ex.getMessage());
-                    stringBuilder.append("Error happened while updating user pin");
-                    stringBuilder.append(UTKit.EOL);
-                    stringBuilder.append(currentMenu.getTitleKin());
-                }
-            } else {
-                hasError = true;
-                stringBuilder.append("Invalid pin format or Pin don't matches");
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(currentMenu.getTitleKin());
-            }
-        } else {
+        }  else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
             leaf = menus.get(0).getLeaf();
