@@ -8,7 +8,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.UUID;
 
 
 @Table(name = "USER_ACCOUNT", uniqueConstraints = {
@@ -61,7 +60,6 @@ public class UserAccount extends AbstractEntity {
         String userPin = UTKit.securePassword(userDetails[9]);
         String userVillageCode = userDetails[8];
 
-        this.setId(UUID.randomUUID());
         this.fullname = userDetails[1];
         this.age = Integer.parseInt(userDetails[2]);
         this.gender = userGender;
