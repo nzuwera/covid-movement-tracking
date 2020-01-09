@@ -1,11 +1,11 @@
 package rw.centrika.ussd.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.domain.Session;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.repository.SessionRepository;
 import rw.centrika.ussd.service.interfaces.ISessionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Service
 public class SessionService implements ISessionService {

@@ -1,5 +1,9 @@
 package rw.centrika.ussd.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.domain.Location;
 import rw.centrika.ussd.domain.Session;
 import rw.centrika.ussd.domain.UserAccount;
@@ -14,13 +18,8 @@ import rw.centrika.ussd.helpers.enums.Questionnaire;
 import rw.centrika.ussd.helpers.enums.Visibility;
 import rw.centrika.ussd.helpers.formatter.EnumFormatter;
 import rw.centrika.ussd.helpers.formatter.ListFormatter;
-import com.goltd.agrigoussd.service.interfaces.*;
 import rw.centrika.ussd.service.interfaces.*;
 import rw.centrika.ussd.validators.QuestionValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;

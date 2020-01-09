@@ -1,8 +1,8 @@
 package rw.centrika.ussd.service.impl;
 
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.validators.QuestionValidator;
-import org.springframework.stereotype.Service;
 
 @Service
 public class LandService {

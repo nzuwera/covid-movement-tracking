@@ -1,7 +1,7 @@
 package rw.centrika.ussd.service.impl;
 
-import rw.centrika.ussd.helpers.UTKit;
 import org.springframework.stereotype.Service;
+import rw.centrika.ussd.helpers.UTKit;
 
 @Service
 public class AssociationService {

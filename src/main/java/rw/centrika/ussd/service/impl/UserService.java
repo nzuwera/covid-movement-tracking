@@ -1,11 +1,11 @@
 package rw.centrika.ussd.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.domain.UserAccount;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.repository.UserRepository;
 import rw.centrika.ussd.service.interfaces.IUserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 

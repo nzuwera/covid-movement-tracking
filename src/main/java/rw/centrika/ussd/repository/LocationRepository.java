@@ -1,11 +1,11 @@
 package rw.centrika.ussd.repository;
 
-import rw.centrika.ussd.domain.Location;
-import rw.centrika.ussd.helpers.enums.LocationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import rw.centrika.ussd.domain.Location;
+import rw.centrika.ussd.helpers.enums.LocationType;
 
 import java.util.List;
 import java.util.UUID;

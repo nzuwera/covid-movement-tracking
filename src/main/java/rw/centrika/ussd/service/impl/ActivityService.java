@@ -1,12 +1,12 @@
 package rw.centrika.ussd.service.impl;
 
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.helpers.enums.ActivityCategory;
 import rw.centrika.ussd.helpers.enums.CropActivities;
 import rw.centrika.ussd.helpers.enums.HarvestActivities;
 import rw.centrika.ussd.helpers.enums.LandActivities;
 import rw.centrika.ussd.helpers.formatter.EnumFormatter;
 import rw.centrika.ussd.validators.QuestionValidator;
-import org.springframework.stereotype.Service;
 
 @Service
 public class ActivityService {

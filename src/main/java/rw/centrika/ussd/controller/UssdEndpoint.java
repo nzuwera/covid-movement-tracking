@@ -1,6 +1,12 @@
 package rw.centrika.ussd.controller;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import rw.centrika.ussd.domain.Session;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.helpers.UssdRequest;
@@ -12,12 +18,6 @@ import rw.centrika.ussd.helpers.enums.Visibility;
 import rw.centrika.ussd.service.interfaces.INavigationManager;
 import rw.centrika.ussd.service.interfaces.ISessionService;
 import rw.centrika.ussd.service.interfaces.IUserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;

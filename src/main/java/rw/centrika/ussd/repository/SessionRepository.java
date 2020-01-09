@@ -1,8 +1,8 @@
 package rw.centrika.ussd.repository;
 
-import rw.centrika.ussd.domain.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import rw.centrika.ussd.domain.Session;
 
 import javax.transaction.Transactional;
 import java.util.UUID;

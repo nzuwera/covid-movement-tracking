@@ -1,8 +1,8 @@
 package rw.centrika.ussd.domain;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import rw.centrika.ussd.helpers.enums.Question;
 import rw.centrika.ussd.helpers.enums.Questionnaire;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.util.Date;

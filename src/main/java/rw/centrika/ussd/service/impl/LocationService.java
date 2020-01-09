@@ -1,10 +1,10 @@
 package rw.centrika.ussd.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.domain.Location;
 import rw.centrika.ussd.repository.LocationRepository;
 import rw.centrika.ussd.service.interfaces.ILocationService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

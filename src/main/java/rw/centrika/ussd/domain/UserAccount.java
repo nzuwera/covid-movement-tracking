@@ -1,9 +1,9 @@
 package rw.centrika.ussd.domain;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.helpers.enums.AccountState;
 import rw.centrika.ussd.helpers.enums.Gender;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;

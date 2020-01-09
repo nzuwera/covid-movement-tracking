@@ -1,8 +1,8 @@
 package rw.centrika.ussd.audit;
 
-import rw.centrika.ussd.helpers.WebUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.AuditorAware;
+import rw.centrika.ussd.helpers.WebUtils;
 
 import java.util.Optional;
 

@@ -1,9 +1,9 @@
 package rw.centrika.ussd.validators;
 
+import org.springframework.stereotype.Service;
 import rw.centrika.ussd.domain.Location;
 import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.enums.Gender;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

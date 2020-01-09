@@ -1,5 +1,7 @@
 package rw.centrika.ussd.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import rw.centrika.ussd.domain.Location;
 import rw.centrika.ussd.domain.UserAccount;
 import rw.centrika.ussd.domain.UserAccountDto;
@@ -12,8 +14,6 @@ import rw.centrika.ussd.service.interfaces.ILocationService;
 import rw.centrika.ussd.service.interfaces.IMenuService;
 import rw.centrika.ussd.service.interfaces.ISessionService;
 import rw.centrika.ussd.service.interfaces.IUserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
