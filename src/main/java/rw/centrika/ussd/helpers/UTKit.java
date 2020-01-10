@@ -1,8 +1,5 @@
 package rw.centrika.ussd.helpers;
 
-import org.mindrot.jbcrypt.BCrypt;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.enums.QuestionType;
