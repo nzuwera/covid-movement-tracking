@@ -1,7 +1,6 @@
 package rw.centrika.ussd.domain;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 
@@ -12,12 +11,11 @@ import javax.validation.constraints.NotNull;
 @Entity
 public class UserAccount extends AbstractEntity {
 
-    @Column(name = "MSISDN",nullable = false, columnDefinition = "varchar(15) not null")
+    @Column(name = "MSISDN", nullable = false, columnDefinition = "varchar(15) not null")
     @NotNull
     private String msisdn;
 
-    @NotEmpty
-    @Column(name = "CARD_NUMBER",nullable = false, columnDefinition = "varchar(50) not null")
+    @Column(name = "CARD_NUMBER", columnDefinition = "varchar(50) default 'CENT000000000000'")
     private String cardNumber;
 
     @Column(name = "LANGUAGE", nullable = false, columnDefinition = "varchar(10) default 'KIN'")
@@ -28,6 +26,11 @@ public class UserAccount extends AbstractEntity {
         // Empty Constructor
     }
 
+    public UserAccount(@NotNull String msisdn) {
+        this.cardNumber = "CENT000000000000";
+        this.msisdn = msisdn;
+        this.language = Language.KIN;
+    }
 
     public String getMsisdn() {
         return msisdn;

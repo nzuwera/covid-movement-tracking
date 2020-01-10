@@ -44,6 +44,10 @@ public class Session extends AbstractEntity {
     @Column(name = "IS_LEAF", nullable = false, columnDefinition = "BOOLEAN default FALSE")
     private Boolean isLeaf;
 
+    @Column(name = "LANGUAGE", nullable = false, columnDefinition = "varchar(3) default 'KIN'")
+    @Enumerated(EnumType.STRING)
+    private Language language;
+
     public Session() {
         // Default Constructor
     }
@@ -121,10 +125,18 @@ public class Session extends AbstractEntity {
         isLeaf = leaf;
     }
 
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
+    }
+
     @Override
     public String toString() {
         return "Session{" +
-                ", msisdn='" + msisdn + '\'' +
+                "msisdn='" + msisdn + '\'' +
                 ", previousQuestion=" + previousQuestion +
                 ", questionnaire=" + questionnaire +
                 ", transactionDatetime=" + transactionDatetime +
@@ -133,7 +145,7 @@ public class Session extends AbstractEntity {
                 ", question=" + question +
                 ", loggedIn=" + loggedIn +
                 ", isLeaf=" + isLeaf +
+                ", language=" + language +
                 '}';
     }
-
 }

@@ -3,26 +3,18 @@ package rw.centrika.ussd.helpers;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.UssdMenu;
-import rw.centrika.ussd.helpers.enums.BuyerType;
-import rw.centrika.ussd.helpers.enums.Gender;
-import rw.centrika.ussd.helpers.enums.Question;
 import rw.centrika.ussd.helpers.enums.QuestionType;
-import rw.centrika.ussd.helpers.formatter.EnumFormatter;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * USSD Tool Kit helper class
  */
 public class UTKit {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UTKit.class);
     public static final String EOL = "\n";
     public static final String JOINER = ":";
     public static final String EMPTY = "";
@@ -56,11 +48,6 @@ public class UTKit {
         return lastInputs[lastInputs.length - 1];
     }
 
-    public static String getLastInput(String input, int limit) {
-        String[] lastInputs = input.split(JOINER);
-        return lastInputs[lastInputs.length - limit];
-    }
-
     public static String listMenus(List<UssdMenu> menus) {
         StringBuilder menuString = new StringBuilder();
         if (menus.size() == 1 && menus.get(0).getQuestionType() != QuestionType.LIST) {
@@ -76,78 +63,23 @@ public class UTKit {
         return menuString.toString();
     }
 
-    public static String listEnums(String header, Question question) {
-        StringBuilder ussdMessage = new StringBuilder();
-        switch (question) {
-            case REGISTRATION_SELECT_GENDER:
-                ussdMessage.append(header);
-                ussdMessage.append(UTKit.EOL);
-                ussdMessage.append(EnumFormatter.format(Gender.class));
-                break;
-            case ACTIVITY_SHOW_CATEGORY:
-                ussdMessage.append(header);
-                break;
-            case ACTIVITY_SHOW_LIST:
-                ussdMessage.append(header);
-                ussdMessage.append(UTKit.EOL);
-                ussdMessage.append("Activity list is missing");
-                break;
-            case MARKETPLACE_LIST_PRODUCT:
-                ussdMessage.append(header);
-                ussdMessage.append(UTKit.EOL);
-                ussdMessage.append("Marketplace product list is missing");
-                break;
-            case AIRTIME_BUYER_MSISDN:
-                ussdMessage.append(header);
-                ussdMessage.append(UTKit.EOL);
-                ussdMessage.append(EnumFormatter.format(BuyerType.class));
-                break;
-                default:
-                    break;
+    public static String listMenus(Language language, List<UssdMenu> menus) {
+        StringBuilder menuString = new StringBuilder();
+        if (menus.size() == 1 && menus.get(0).getQuestionType() != QuestionType.LIST) {
+            menuString.append(language.equals(Language.KIN) ? menus.get(0).getTitleKin() : menus.get(0).getTitleEng());
+        } else {
+            for (int i = 0; i < menus.size(); i++) {
+                menuString.append(i + 1);
+                menuString.append(BLANK);
+                menuString.append(language.equals(Language.KIN) ? menus.get(i).getTitleKin() : menus.get(i).getTitleEng());
+                menuString.append(EOL);
+            }
         }
-        return ussdMessage.toString();
+        return menuString.toString();
     }
 
-    public static Date setExpiryDate(Date date, int days) {
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(date);
-        cal.add(Calendar.DATE, days);
-        return cal.getTime();
-    }
-
-    public static String getLocationCode(String lastInput, String locationType) {
-        String[] lastInputs = lastInput.split(JOINER);
-        int limit = 0;
-        StringBuilder locationCode = new StringBuilder();
-        if (locationType.equals("province")) {
-            limit = 1;
-        } else if (locationType.equals("district")) {
-            limit = 2;
-        } else if (locationType.equals("sector")) {
-            limit = 3;
-        } else if (locationType.equals("cell")) {
-            limit = 4;
-        } else if (locationType.equals("village")) {
-            limit = 5;
-        }
-        for (int i = lastInputs.length - limit; i < lastInputs.length; i++) {
-            LOGGER.info("locationType {} lowerLimit  {}", locationType, i);
-            locationCode.append((String.valueOf(lastInputs[i]).length() > 1 ? String.valueOf(lastInputs[i]) : "0" + lastInputs[i]));
-        }
-
-        return locationCode.toString();
-    }
-
-    public static boolean validateFullName(String fullName) {
-        Pattern p = Pattern.compile("^[ A-Za-z]+$");
-        Matcher m = p.matcher(fullName);
-        return m.matches();
-    }
-
-    public static boolean validateAge(String age, int minAge) {
-        Pattern p = Pattern.compile("^[0-9]+$");
-        Matcher m = p.matcher(age);
-        return (m.matches() && (Integer.parseInt(age) >= minAge));
+    public static String setTitle(Language language, UssdMenu menu) {
+        return language.equals(Language.KIN) ? menu.getTitleKin() : menu.getTitleEng();
     }
 
     public static boolean isExpired(Date date) {
@@ -157,9 +89,5 @@ public class UTKit {
 
     public static Boolean validateAssociationCode(String associationCode) {
         return !associationCode.isEmpty();
-    }
-
-    public static String securePassword(String value) {
-        return BCrypt.hashpw(value, "$2a$10$5UhI215Wx3NDc.zc9Qb2ge");
     }
 }

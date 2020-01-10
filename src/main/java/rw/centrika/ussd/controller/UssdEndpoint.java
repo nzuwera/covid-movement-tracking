@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.Session;
+import rw.centrika.ussd.domain.UserAccount;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.helpers.UssdRequest;
 import rw.centrika.ussd.helpers.UssdResponse;
@@ -21,7 +23,6 @@ import rw.centrika.ussd.service.interfaces.IUserService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
-import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/ussd")
@@ -40,7 +41,7 @@ public class UssdEndpoint {
         this.navigationManager = navigationManager;
     }
 
-    @GetMapping(value = "/agrigo")
+    @GetMapping(value = "/centrika")
     public String ussdHandler(UssdRequest request, HttpServletResponse httpResponse) {
 
         UssdResponse ussdResponse;
@@ -56,27 +57,20 @@ public class UssdEndpoint {
              * Set User default language to KIN
              */
             session = new Session();
-            session.setId(UUID.randomUUID());
             session.setMsisdn(request.getMsisdn());
             session.setLastInput(request.getInput());
             session.setLeaf(false);
             session.setLoggedIn(false);
             session.setTransactionDatetime(new Date());
-            if (Boolean.FALSE.equals(userService.exists(request.getMsisdn()))) {
-                // Start User Registration
-                //
-                session.setQuestionnaire(Questionnaire.REGISTRATION);
-                session.setPreviousQuestion(Question.REGISTRATION_START);
-                session.setQuestion(Question.REGISTRATION_START);
-                session.setQuestionnaire(Questionnaire.REGISTRATION);
-                session.setStartService(true);
-
+            session.setQuestionnaire(Questionnaire.MAIN);
+            session.setPreviousQuestion(Question.START);
+            session.setQuestion(Question.START);
+            session.setStartService(false);
+            if (Boolean.TRUE.equals(userService.exists(request.getMsisdn()))) {
+                session.setLanguage(userService.getUserByMsisdn(request.getMsisdn()).getLanguage());
             } else {
-                session.setQuestionnaire(Questionnaire.MAIN);
-                session.setPreviousQuestion(Question.MAIN_LOGIN);
-                session.setQuestion(Question.MAIN_LOGIN);
-                session.setQuestionnaire(Questionnaire.MAIN);
-                session.setStartService(false);
+                userService.create(new UserAccount(request.getMsisdn()));
+                session.setLanguage(Language.KIN);
             }
             /*
              * Check if a ussd session already exists
