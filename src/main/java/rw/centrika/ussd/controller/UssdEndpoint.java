@@ -4,19 +4,21 @@ package rw.centrika.ussd.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.Session;
 import rw.centrika.ussd.domain.UserAccount;
+import rw.centrika.ussd.helpers.BusStopSuccessResponse;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.helpers.UssdRequest;
 import rw.centrika.ussd.helpers.UssdResponse;
 import rw.centrika.ussd.helpers.enums.Freeflow;
 import rw.centrika.ussd.helpers.enums.Question;
 import rw.centrika.ussd.helpers.enums.Questionnaire;
-import rw.centrika.ussd.helpers.enums.Visibility;
+import rw.centrika.ussd.service.BookingService;
 import rw.centrika.ussd.service.interfaces.INavigationManager;
 import rw.centrika.ussd.service.interfaces.ISessionService;
 import rw.centrika.ussd.service.interfaces.IUserService;
@@ -29,16 +31,20 @@ import java.util.Date;
 public class UssdEndpoint {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UssdEndpoint.class);
+    @Value("${application.short-code}")
+    private String shortCode;
 
     private IUserService userService;
     private ISessionService sessionService;
     private INavigationManager navigationManager;
+    private BookingService bookingService;
 
     @Autowired
-    public UssdEndpoint(IUserService userService, ISessionService sessionService, INavigationManager navigationManager) {
+    public UssdEndpoint(IUserService userService, ISessionService sessionService, INavigationManager navigationManager, BookingService bookingService) {
         this.userService = userService;
         this.sessionService = sessionService;
         this.navigationManager = navigationManager;
+        this.bookingService = bookingService;
     }
 
     @GetMapping(value = "/centrika")
@@ -119,8 +125,12 @@ public class UssdEndpoint {
                  * USSD Backward navigation:
                  * - 99 Go to main menu
                  */
-                Visibility visibility = (session.getQuestionnaire().equals(Questionnaire.REGISTRATION) ? Visibility.UNREGISTERED : Visibility.REGISTERED);
-                session = navigationManager.toMainMenu(request, visibility);
+                session.setQuestionnaire(Questionnaire.MAIN);
+                session.setPreviousQuestion(Question.START);
+                session.setQuestion(Question.START);
+                session.setLastInput(UTKit.EMPTY);
+                sessionService.update(session);
+                request.setInput(shortCode);
                 ussdResponse = navigationManager.buildMenu(request, session);
             } else {
                 /*
@@ -141,4 +151,11 @@ public class UssdEndpoint {
         LOGGER.info("ussdResponse \n{}", ussdMessage);
         return ussdMessage;
     }
+
+
+    @GetMapping(value = "/stops")
+    public BusStopSuccessResponse getBusStops() {
+        return bookingService.getBusStops();
+    }
+
 }

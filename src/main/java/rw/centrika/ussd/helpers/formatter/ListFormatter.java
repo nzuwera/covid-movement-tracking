@@ -1,10 +1,13 @@
 package rw.centrika.ussd.helpers.formatter;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.language.Soundex;
 import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.UTKit;
 import rw.centrika.ussd.helpers.enums.QuestionType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListFormatter {
@@ -42,5 +45,20 @@ public class ListFormatter {
             listMessage.append(language.equals(Language.KIN) ? listObject.get(0).getTitleKin() : listObject.get(0).getTitleEng());
         }
         return listMessage;
+    }
+
+    public static List<String> filterStringList(String filter, List<String> strings) {
+        Soundex soundex = new Soundex();
+        List<String> result = new ArrayList<>();
+        try {
+            for (String line : strings) {
+                if (soundex.difference(filter, line) >= 2) {
+                    result.add(line);
+                }
+            }
+            return result;
+        } catch (EncoderException ex) {
+            return result;
+        }
     }
 }

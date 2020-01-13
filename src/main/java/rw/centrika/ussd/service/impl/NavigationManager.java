@@ -3,19 +3,18 @@ package rw.centrika.ussd.service.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.Session;
 import rw.centrika.ussd.domain.UserAccount;
 import rw.centrika.ussd.domain.UssdMenu;
-import rw.centrika.ussd.helpers.ResponseObject;
-import rw.centrika.ussd.helpers.UTKit;
-import rw.centrika.ussd.helpers.UssdRequest;
-import rw.centrika.ussd.helpers.UssdResponse;
+import rw.centrika.ussd.helpers.*;
 import rw.centrika.ussd.helpers.enums.Question;
 import rw.centrika.ussd.helpers.enums.Questionnaire;
 import rw.centrika.ussd.helpers.enums.Visibility;
 import rw.centrika.ussd.helpers.formatter.EnumFormatter;
+import rw.centrika.ussd.service.BookingService;
 import rw.centrika.ussd.service.interfaces.IMenuService;
 import rw.centrika.ussd.service.interfaces.INavigationManager;
 import rw.centrika.ussd.service.interfaces.ISessionService;
@@ -28,17 +27,21 @@ import java.util.List;
 @Service
 public class NavigationManager implements INavigationManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(NavigationManager.class);
-    private static final String SHORT_CODE = "*123#";
+
+    @Value("${application.short-code}")
+    private String shortCode;
 
     private ISessionService sessionService;
     private IMenuService menuService;
     private IUserService userService;
+    private BookingService bookingService;
 
     @Autowired
-    public NavigationManager(ISessionService sessionService, IMenuService menuService, IUserService userService) {
+    public NavigationManager(ISessionService sessionService, IMenuService menuService, IUserService userService, BookingService bookingService) {
         this.sessionService = sessionService;
         this.menuService = menuService;
         this.userService = userService;
+        this.bookingService = bookingService;
     }
 
     private Session session;
@@ -71,7 +74,7 @@ public class NavigationManager implements INavigationManager {
     @Override
     public Session toMainMenu(UssdRequest ussdRequest, Visibility visibility) {
         session = sessionService.getByMsisdn(ussdRequest.getMsisdn());
-        session.setLastInput(SHORT_CODE);
+        session.setLastInput(shortCode);
         if (visibility.equals(Visibility.REGISTERED)) {
             session.setPreviousQuestion(Question.MAIN_LOGIN);
             session.setQuestion(Question.MAIN_LOGIN);
@@ -124,7 +127,7 @@ public class NavigationManager implements INavigationManager {
         List<UssdMenu> nexMenus;
         StringBuilder stringBuilder = new StringBuilder();
         Boolean hasError = false;
-        String lastInput = (session.getLastInput().equals(SHORT_CODE) && request.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + request.getInput());
+        String lastInput = (session.getLastInput().equals(shortCode) && request.getNewRequest().equals("1") ? session.getLastInput() : session.getLastInput() + UTKit.JOINER + request.getInput());
         leaf = menus.get(0).getLeaf();
         Questionnaire questionnaire = menus.get(0).getQuestionnaire();
         previousQuestion = menus.get(0).getParentMenu().getQuestion();
@@ -188,11 +191,55 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(EnumFormatter.format(Language.class));
             }
+        } else if (selectedQuestion == Question.DEPARTURE
+                || selectedQuestion == Question.DESTINATION) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            BusStopResponseObject stopResponseObject = bookingService.getStopByName(request.getInput());
+            if (Boolean.FALSE.equals(stopResponseObject.getStatus())) {
+                stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(stopResponseObject.getMessage());
+            } else {
+                hasError = true;
+                stringBuilder.append("Selected bus stop not found");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+            }
+            // Get busStops based on selected input
+        } else if (selectedQuestion == Question.CONFIRM_DEPARTURE
+                || selectedQuestion == Question.CONFIRM_DESTINATION) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            String previousInput = UTKit.getLastInput(session.getLastInput());
+            BusStopResponseObject stopResponseObject = bookingService.validateSelectedBus(request.getInput(), previousInput);
+            if (Boolean.FALSE.equals(stopResponseObject.getStatus())) {
+                lastInput = UTKit.replaceLastInput(session.getLastInput(), stopResponseObject.getMessage());
+                if (selectedQuestion == Question.CONFIRM_DESTINATION) {
+                    stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(UTKit.getBusTime());
+                    // get trip departure time
+                } else {
+                    stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                }
+            } else {
+                stopResponseObject = bookingService.getStopByName(previousInput);
+                hasError = true;
+                stringBuilder.append("Invalid selected option");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(stopResponseObject.getMessage());
+            }
+
         } else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
-            leaf = menus.get(0).getLeaf();
-            stringBuilder.append(UTKit.listMenus(prefferedLanguage, menus));
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+            leaf = nexMenus.get(0).getLeaf();
         }
         ResponseObject responseObject = new ResponseObject();
         responseObject.setDisplayMessage(stringBuilder.toString());

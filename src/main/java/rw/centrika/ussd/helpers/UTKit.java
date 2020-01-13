@@ -1,16 +1,23 @@
 package rw.centrika.ussd.helpers;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import rw.centrika.ussd.domain.BusTime;
 import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.enums.QuestionType;
 
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * USSD Tool Kit helper class
  */
 public class UTKit {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UTKit.class);
 
     public static final String EOL = "\n";
     public static final String JOINER = ":";
@@ -84,7 +91,63 @@ public class UTKit {
         return (today.getTime() - date.getTime()) >= 5 * 60 * 1000;
     }
 
-    public static Boolean validateAssociationCode(String associationCode) {
-        return !associationCode.isEmpty();
+    public static JSONObject createJSONObject(String jsonString) {
+        JSONObject jsonObject = new JSONObject();
+        JSONParser jsonParser = new JSONParser();
+        if ((jsonString != null) && !(jsonString.isEmpty())) {
+            try {
+                jsonObject = (JSONObject) jsonParser.parse(jsonString);
+            } catch (org.json.simple.parser.ParseException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+        return jsonObject;
     }
+
+    public static String replaceLastInput(String lastInput, String replacingInput) {
+        String[] sessionInputs = lastInput.split(JOINER);
+        String[] sessionInputsReduced = Arrays.copyOf(sessionInputs, sessionInputs.length - 1);
+        return String.join(JOINER, sessionInputsReduced) + JOINER + replacingInput;
+    }
+
+    public static void main(String[] args) {
+       //
+    }
+
+    public static String getBusTime() {
+        List<BusTime> busTimes = getGetDepartureTime();
+        StringBuilder timeString = new StringBuilder();
+        for (int i = 0; i < busTimes.size(); i++) {
+            timeString.append(i + 1);
+            timeString.append(DOT);
+            timeString.append(BLANK);
+            timeString.append(busTimes.get(i).getStartDate());
+            timeString.append(BLANK);
+            timeString.append(busTimes.get(i).getStartTime());
+            timeString.append(EOL);
+        }
+        return timeString.toString();
+    }
+
+    public static List<BusTime> getGetDepartureTime() {
+        List<BusTime> listDepartureTime = new ArrayList<>();
+        String dateFormat = "yyyy-MM-dd hh'H'mm";
+        SimpleDateFormat df = new SimpleDateFormat(dateFormat);
+        Calendar start = Calendar.getInstance();
+        start.add(Calendar.HOUR, 1);
+        start.set(Calendar.SECOND, 0);
+        start.set(Calendar.MILLISECOND, 0);
+        for (int i = 0; i < 4; i++) {
+            int modulo = start.get(Calendar.MINUTE) % 30;
+            if (modulo > 0) {
+                start.add(Calendar.MINUTE, -modulo);
+            } else {
+                start.add(Calendar.MINUTE, 30);
+            }
+            String[] busTimes = df.format(start.getTime()).split(BLANK);
+            listDepartureTime.add(new BusTime(busTimes[0], busTimes[1]));
+        }
+        return listDepartureTime;
+    }
+
 }
