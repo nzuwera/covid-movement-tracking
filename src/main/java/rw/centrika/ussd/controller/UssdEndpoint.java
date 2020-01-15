@@ -113,14 +113,14 @@ public class UssdEndpoint {
              */
             session = sessionService.getByMsisdn(request.getMsisdn());
 
-            if (request.getInput().equals("0") && !session.getQuestion().equals(Question.MAIN_LOGIN) && !session.getQuestion().equals(Question.REGISTRATION_START)) {
+            if (request.getInput().equals("0") && !session.getQuestion().equals(Question.START)) {
                 /*
                  * USSD Backward navigation:
                  * - 0 Go Back
                  */
                 session = navigationManager.backward(request);
                 ussdResponse = navigationManager.buildMenu(request, session);
-            } else if (request.getInput().equals("99") && !session.getQuestion().equals(Question.MAIN_LOGIN) && !session.getQuestion().equals(Question.REGISTRATION_START)) {
+            } else if (request.getInput().equals("99") && !session.getQuestion().equals(Question.START)) {
                 /*
                  * USSD Backward navigation:
                  * - 99 Go to main menu
@@ -130,6 +130,7 @@ public class UssdEndpoint {
                 session.setQuestion(Question.START);
                 session.setLastInput(UTKit.EMPTY);
                 sessionService.update(session);
+                request.setNewRequest("1");
                 request.setInput(shortCode);
                 ussdResponse = navigationManager.buildMenu(request, session);
             } else {

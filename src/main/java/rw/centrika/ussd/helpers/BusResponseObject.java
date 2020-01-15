@@ -1,14 +1,14 @@
 package rw.centrika.ussd.helpers;
 
-public class BusStopResponseObject {
+public class BusResponseObject {
     private Boolean status;
     private String message;
 
-    public BusStopResponseObject() {
+    public BusResponseObject() {
         //
     }
 
-    public BusStopResponseObject(Boolean status, String message) {
+    public BusResponseObject(Boolean status, String message) {
         this.status = status;
         this.message = message;
     }

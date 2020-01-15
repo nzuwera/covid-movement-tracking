@@ -1,5 +1,7 @@
 package rw.centrika.ussd.domain;
 
+import rw.centrika.ussd.helpers.UTKit;
+
 public class BusTime {
 
     private String startDate;
@@ -7,7 +9,11 @@ public class BusTime {
 
     public BusTime() {
     }
-
+public BusTime(String selectedTime){
+        String[] times = selectedTime.split(UTKit.BLANK);
+        this.startDate = times[0];
+        this.startTime = times[1];
+}
     public BusTime(String startDate, String startTime) {
         this.startDate = startDate;
         this.startTime = startTime;
