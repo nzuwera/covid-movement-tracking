@@ -105,7 +105,7 @@ public class BookingService {
         Boolean hasError = false;
         StringBuilder message = new StringBuilder();
         List<BusList> busLists = busListSuccess.getResult();
-        if(!busLists.isEmpty()) {
+        if (!busLists.isEmpty()) {
             for (int i = 0; i < busLists.size(); i++) {
                 message.append(i + 1);
                 message.append(UTKit.DOT);
@@ -119,7 +119,7 @@ public class BookingService {
                 message.append(UTKit.EOL);
             }
             responseObject.setMessage(message.toString());
-        }else {
+        } else {
             hasError = true;
             responseObject.setMessage("No bus available on the selected time");
         }
@@ -132,8 +132,13 @@ public class BookingService {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
         List<BusList> busLists = busListSuccess.getResult();
-        if (Integer.parseInt(input) <= busLists.size() && Integer.parseInt(input) > 0) {
-            responseObject.setMessage(busLists.get(Integer.parseInt(input) - 1).getName() + UTKit.BLANK + busLists.get(Integer.parseInt(input) - 1).getTotalAmount());
+        if (Boolean.TRUE.equals(UTKit.validateNumericalString(input))) {
+            if (Integer.parseInt(input) <= busLists.size() && Integer.parseInt(input) > 0) {
+                responseObject.setMessage(busLists.get(Integer.parseInt(input) - 1).getName() + UTKit.BLANK + busLists.get(Integer.parseInt(input) - 1).getTotalAmount());
+            } else {
+                hasError = true;
+                responseObject.setMessage("Invalid bus");
+            }
         } else {
             hasError = true;
             responseObject.setMessage("Invalid bus");
@@ -240,12 +245,31 @@ public class BookingService {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
         List<BusTime> departureTimes = UTKit.getGetDepartureTime();
-        if (Integer.parseInt(input) > departureTimes.size() && Integer.parseInt(input) > 0) {
-            hasError = true;
-            responseObject.setMessage("Invalid time selected");
+        if (Boolean.TRUE.equals(UTKit.validateNumericalString(input))) {
+            if (Integer.parseInt(input) > departureTimes.size() && Integer.parseInt(input) > 0) {
+                hasError = true;
+                responseObject.setMessage("Invalid time selected");
+            } else {
+                String selectedTime = departureTimes.get(Integer.parseInt(input) - 1).getStartDate() + UTKit.BLANK + departureTimes.get(Integer.parseInt(input) - 1).getStartTime();
+                responseObject.setMessage(selectedTime);
+            }
         } else {
-            String selectedTime = departureTimes.get(Integer.parseInt(input) - 1).getStartDate() + UTKit.BLANK + departureTimes.get(Integer.parseInt(input) - 1).getStartTime();
-            responseObject.setMessage(selectedTime);
+            hasError = true;
+            responseObject.setMessage("Only numbers are allowed");
+        }
+        responseObject.setStatus(hasError);
+        return responseObject;
+    }
+
+    public BusResponseObject validateBusCard(String input) {
+        Boolean hasError = false;
+        BusResponseObject responseObject = new BusResponseObject();
+        if (Boolean.FALSE.equals(UTKit.validateSafariBusCardForm(input))) {
+            hasError = true;
+            responseObject.setMessage("Invalid card format CENTxxxxxxxxxxxx");
+        } else {
+            // Call API to validate card
+            responseObject.setMessage("valide card format");
         }
         responseObject.setStatus(hasError);
         return responseObject;

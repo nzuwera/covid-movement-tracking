@@ -83,8 +83,10 @@ public class NavigationManager implements INavigationManager {
         UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
         List<UssdMenu> nextMenus = menuService.getNextMenus(currentMenu);
         ResponseObject responseObject = this.prepareDisplayMessage(ussdRequest, nextMenus);
-        String displayMessage = responseObject.getDisplayMessage();
         leaf = responseObject.getLeaf();
+        String mainMenuString = session.getLanguage() == Language.KIN ? "99. Aha banza" : "99. Main menu";
+        String displayMessage = (session.getQuestion() == Question.START || Boolean.TRUE.equals(leaf)) ? responseObject.getDisplayMessage() : responseObject.getDisplayMessage() + UTKit.EOL + UTKit.EOL + mainMenuString;
+
         selectedQuestion = responseObject.getSelectedQuestion();
         previousQuestion = responseObject.getPreviousQuestion();
         Questionnaire questionnaire = responseObject.getQuestionnaire();
@@ -98,6 +100,7 @@ public class NavigationManager implements INavigationManager {
         if (Boolean.FALSE.equals(responseObject.getHasError())) {
             sessionService.update(session);
         }
+
         response.setFreeflow(leaf);
         response.setMessage(displayMessage);
         return response;
@@ -158,6 +161,7 @@ public class NavigationManager implements INavigationManager {
                     userAccount.setLanguage(Language.values()[Integer.parseInt(request.getInput()) - 1]);
                     userService.update(userAccount);
                     session.setLanguage(Language.values()[Integer.parseInt(request.getInput()) - 1]);
+                    prefferedLanguage = session.getLanguage();
                     stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
                 } catch (Exception ex) {
                     hasError = true;
@@ -279,10 +283,11 @@ public class NavigationManager implements INavigationManager {
             BusListSuccess listSuccess = bookingService.getBusLists(listRequest);
             BusResponseObject availableBusResponse = bookingService.validateBusList(request.getInput(), listSuccess);
             if (Boolean.FALSE.equals(availableBusResponse.getStatus())) {
-                String busName = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getName().replace(UTKit.JOINER, UTKit.EMPTY);
+                String companyName = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCompanyName();
+                String busName = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getName().replace(UTKit.JOINER, UTKit.EMPTY).replace(UTKit.BLANK + UTKit.BLANK, UTKit.BLANK);
                 String amount = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getTotalAmount();
                 String currency = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCurrency();
-                lastInput = session.getLastInput() + UTKit.BLANK + busName + UTKit.BLANK + amount + currency;
+                lastInput = session.getLastInput() + UTKit.JOINER + companyName + UTKit.BLANK + busName + UTKit.BLANK + amount + currency;
                 stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
             } else {
                 hasError = true;
@@ -295,7 +300,22 @@ public class NavigationManager implements INavigationManager {
         } else if (selectedQuestion == Question.ENTER_BUS_CARD) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
             nexMenus = menuService.getNextMenus(currentMenu);
-
+            BusResponseObject cardValidation = bookingService.validateBusCard(request.getInput());
+            if (Boolean.FALSE.equals(cardValidation.getStatus())) {
+                String previousInput = UTKit.getLastInput(session.getLastInput());
+                stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(previousInput.replace(UTKit.BLANK, UTKit.EOL));
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(request.getInput());
+                leaf = nexMenus.get(0).getLeaf();
+            } else {
+                leaf = false;
+                hasError = true;
+                stringBuilder.append(cardValidation.getMessage());
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+            }
         } else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();

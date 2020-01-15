@@ -25,6 +25,8 @@ public class UTKit {
     public static final String BLANK = " ";
     public static final String FREE_FLOW_HEADER = "Freeflow";
     public static final String DOT = ".";
+    private static final String CENTRIKA_CARD = "^CENT\\d{12}$"; // CENT190701000753
+    private static final String NUMBERS = "^[0-9]+$";
 
     private UTKit() {
         // Empty private constructor
@@ -110,10 +112,6 @@ public class UTKit {
         return String.join(JOINER, sessionInputsReduced) + JOINER + replacingInput;
     }
 
-    public static void main(String[] args) {
-       //
-    }
-
     public static String getBusTime() {
         List<BusTime> busTimes = getGetDepartureTime();
         StringBuilder timeString = new StringBuilder();
@@ -150,4 +148,11 @@ public class UTKit {
         return listDepartureTime;
     }
 
+    public static boolean validateSafariBusCardForm(String upiNumber) {
+        return upiNumber.toUpperCase().matches(CENTRIKA_CARD);
+    }
+
+    public static Boolean validateNumericalString(String number) {
+        return number.matches(NUMBERS);
+    }
 }
