@@ -1,0 +1,20 @@
+package rw.centrika.ussd.helpers.enums;
+
+public enum Question {
+    // Centrika Menus
+    START,
+    MAIN_MENU,
+    BUS_BOOKING,
+    DEPARTURE,
+    CONFIRM_DEPARTURE,
+    DESTINATION,
+    CONFIRM_DESTINATION,
+    SHOW_DEPARTURE_TIME,
+    SHOW_AVAILABLE_BUSES,
+    ENTER_BUS_CARD,
+    SHOW_BOOKING_MESSAGE,
+    LANGUAGE,
+    SELECT_LANGUAGE,
+    CONFIRM_LANGUAGE_UPDATION
+
+}
