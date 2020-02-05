@@ -109,9 +109,8 @@ public class NavigationManager implements INavigationManager {
     @Override
     public ResponseObject prepareDisplayMessage(UssdRequest request, List<UssdMenu> menus) {
         LOGGER.info("menus {}", menus);
-        Language prefferedLanguage = session.getLanguage();
+        Language sessionLanguage = session.getLanguage();
         UssdMenu currentMenu;
-        List<UssdMenu> siblings;
         List<UssdMenu> nexMenus;
         StringBuilder stringBuilder = new StringBuilder();
         Boolean hasError = false;
@@ -120,34 +119,47 @@ public class NavigationManager implements INavigationManager {
         Questionnaire questionnaire = menus.get(0).getQuestionnaire();
         previousQuestion = menus.get(0).getParentMenu().getQuestion();
         selectedQuestion = menus.get(0).getQuestion();
-        if (selectedQuestion == Question.MAIN_MENU) {
-            List<UssdMenu> children = menuService.getNextMenus(selectedQuestion);
-            stringBuilder.append(UTKit.setTitle(prefferedLanguage, children.get(0).getParentMenu()));
-            stringBuilder.append(UTKit.EOL);
-            stringBuilder.append(UTKit.listMenus(prefferedLanguage, children));
-        } else if (selectedQuestion == Question.BUS_BOOKING) {
+        if (selectedQuestion == Question.SELECT_LANGUAGE) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
-            siblings = menuService.getNextMenus(currentMenu.getParentMenu());
-            if (QuestionValidator.validateMenus(request.getInput(), siblings)) {
-                selectedQuestion = siblings.get(Integer.parseInt(request.getInput()) - 1).getQuestion();
-                previousQuestion = siblings.get(Integer.parseInt(request.getInput()) - 1).getParentMenu().getQuestion();
-                nexMenus = menuService.getNextMenus(selectedQuestion);
-                if (selectedQuestion.equals(Question.LANGUAGE)) {
-                    stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+            stringBuilder.append("Murakaza neza kuri serivise za Safaribus.");
+            stringBuilder.append(UTKit.EOL);
+            stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
+            stringBuilder.append(UTKit.EOL);
+            stringBuilder.append(EnumFormatter.format(Language.class));
+        } else if (selectedQuestion == Question.DEPARTURE) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            if (Boolean.TRUE.equals(QuestionValidator.validateEnum(request.getInput(), Language.class))) {
+                selectedQuestion = nexMenus.get(0).getQuestion();
+                previousQuestion = nexMenus.get(0).getParentMenu().getQuestion();
+                leaf = currentMenu.getLeaf();
+                try {
+                    leaf = nexMenus.get(0).getLeaf();
+                    UserAccount userAccount = userService.getUserByMsisdn(request.getMsisdn());
+                    userAccount.setLanguage(Language.values()[Integer.parseInt(request.getInput()) - 1]);
+                    userService.update(userAccount);
+                    session.setLanguage(Language.values()[Integer.parseInt(request.getInput()) - 1]);
+                    sessionLanguage = session.getLanguage();
+                    stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
+                } catch (Exception ex) {
+                    hasError = true;
+                    leaf = nexMenus.get(0).getLeaf();
+                    stringBuilder.append("Invalid Error happened while updating language");
+                    stringBuilder.append(UTKit.EOL);
+                    stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                     stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(EnumFormatter.format(Language.class));
-                } else {
-                    stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
                 }
             } else {
                 hasError = true;
-                stringBuilder.append("Invalid service");
+                stringBuilder.append("Invalid Language");
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.listMenus(prefferedLanguage, siblings));
+                stringBuilder.append(EnumFormatter.format(Language.class));
             }
-        } else if (selectedQuestion == Question.SELECT_LANGUAGE) {
+        }
+/*        else if (selectedQuestion == Question.SELECT_LANGUAGE) {
             // validate association code
             currentMenu = menuService.getByQuestion(selectedQuestion);
             nexMenus = menuService.getNextMenus(currentMenu);
@@ -180,20 +192,21 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(EnumFormatter.format(Language.class));
             }
-        } else if (selectedQuestion == Question.DEPARTURE
+        } */
+        else if (selectedQuestion == Question.DEPARTURE
                 || selectedQuestion == Question.DESTINATION) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
             nexMenus = menuService.getNextMenus(currentMenu);
             BusResponseObject stopResponseObject = bookingService.getStopByName(request.getInput());
             if (Boolean.FALSE.equals(stopResponseObject.getStatus())) {
-                stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(stopResponseObject.getMessage());
             } else {
                 hasError = true;
                 stringBuilder.append("Selected bus stop not found");
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
             }
             // Get busStops based on selected input
         } else if (selectedQuestion == Question.CONFIRM_DEPARTURE
@@ -205,19 +218,19 @@ public class NavigationManager implements INavigationManager {
             if (Boolean.FALSE.equals(stopResponseObject.getStatus())) {
                 lastInput = UTKit.replaceLastInput(session.getLastInput(), stopResponseObject.getMessage());
                 if (selectedQuestion == Question.CONFIRM_DESTINATION) {
-                    stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                    stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                     stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(UTKit.getBusTime());
                     // get trip departure time
                 } else {
-                    stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                    stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                 }
             } else {
                 stopResponseObject = bookingService.getStopByName(previousInput);
                 hasError = true;
                 stringBuilder.append("Invalid selected option");
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(stopResponseObject.getMessage());
             }
@@ -239,14 +252,14 @@ public class NavigationManager implements INavigationManager {
                     BusListSuccess listSuccess = bookingService.getBusLists(busListRequest);
                     BusResponseObject busResponseObject = bookingService.showAvailableBuses(listSuccess);
                     if (Boolean.FALSE.equals(busResponseObject.getStatus())) {
-                        stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                        stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                         stringBuilder.append(UTKit.EOL);
                         stringBuilder.append(busResponseObject.getMessage());
                     } else {
                         hasError = true;
                         stringBuilder.append(busResponseObject.getMessage());
                         stringBuilder.append(UTKit.EOL);
-                        stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                        stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                         stringBuilder.append(UTKit.EOL);
                         stringBuilder.append(UTKit.getBusTime());
                     }
@@ -255,7 +268,7 @@ public class NavigationManager implements INavigationManager {
                     hasError = true;
                     stringBuilder.append("Error while getting available buses");
                     stringBuilder.append(UTKit.EOL);
-                    stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                    stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                     stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(UTKit.getBusTime());
                 }
@@ -263,7 +276,7 @@ public class NavigationManager implements INavigationManager {
                 hasError = true;
                 stringBuilder.append("Invalid time selected");
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(UTKit.getBusTime());
             }
@@ -288,12 +301,12 @@ public class NavigationManager implements INavigationManager {
                 String amount = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getTotalAmount();
                 String currency = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCurrency();
                 lastInput = session.getLastInput() + UTKit.JOINER + companyName + UTKit.BLANK + busName + UTKit.BLANK + amount + currency;
-                stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
             } else {
                 hasError = true;
                 stringBuilder.append(availableBusResponse.getMessage());
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(bookingService.showAvailableBuses(listSuccess).getMessage());
             }
@@ -303,7 +316,7 @@ public class NavigationManager implements INavigationManager {
             BusResponseObject cardValidation = bookingService.validateBusCard(request.getInput());
             if (Boolean.FALSE.equals(cardValidation.getStatus())) {
                 String previousInput = UTKit.getLastInput(session.getLastInput());
-                stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+                stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(previousInput.replace(UTKit.BLANK, UTKit.EOL));
                 stringBuilder.append(UTKit.EOL);
@@ -314,14 +327,14 @@ public class NavigationManager implements INavigationManager {
                 hasError = true;
                 stringBuilder.append(cardValidation.getMessage());
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.setTitle(prefferedLanguage, currentMenu));
+                stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
             }
         } else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
             currentMenu = menuService.getByQuestion(selectedQuestion);
             nexMenus = menuService.getNextMenus(currentMenu);
-            stringBuilder.append(UTKit.listMenus(prefferedLanguage, nexMenus));
+            stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
             leaf = nexMenus.get(0).getLeaf();
         }
         ResponseObject responseObject = new ResponseObject();

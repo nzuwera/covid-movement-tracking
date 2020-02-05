@@ -72,11 +72,9 @@ public class UssdEndpoint {
             session.setPreviousQuestion(Question.START);
             session.setQuestion(Question.START);
             session.setStartService(false);
-            if (Boolean.TRUE.equals(userService.exists(request.getMsisdn()))) {
-                session.setLanguage(userService.getUserByMsisdn(request.getMsisdn()).getLanguage());
-            } else {
+            session.setLanguage(Language.KIN);
+            if (Boolean.FALSE.equals(userService.exists(request.getMsisdn()))) {
                 userService.create(new UserAccount(request.getMsisdn()));
-                session.setLanguage(Language.KIN);
             }
             /*
              * Check if a ussd session already exists
