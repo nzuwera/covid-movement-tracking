@@ -3,13 +3,13 @@ package rw.centrika.ussd.helpers.enums;
 public enum Question {
     // Centrika Menus
     START,
-    MAIN_MENU,
-    BUS_BOOKING,
-    DEPARTURE,
+    TIME_OF_DAY,
     CONFIRM_DEPARTURE,
     DESTINATION,
     CONFIRM_DESTINATION,
-    SHOW_DEPARTURE_TIME,
+    DEPARTURE,
+    DEPARTURE_DATE,
+    DEPARTURE_TIME,
     SHOW_AVAILABLE_BUSES,
     ENTER_BUS_CARD,
     SHOW_BOOKING_MESSAGE,

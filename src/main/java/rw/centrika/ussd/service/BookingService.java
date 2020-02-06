@@ -187,7 +187,14 @@ public class BookingService {
         return responseObject;
     }
 
-    public BusResponseObject validateSelectedBus(String input, String locationName) {
+    /**
+     * Validate selected bus location
+     *
+     * @param input        user input
+     * @param locationName bus stop
+     * @return BusResponseObject
+     */
+    public BusResponseObject validateSelectedBusStop(String input, String locationName) {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
         try {
@@ -217,34 +224,18 @@ public class BookingService {
         return responseObject;
     }
 
-
-    public BusResponseObject validateBusList(String input, BusListRequest request) {
+    /**
+     * Validate departure time
+     *
+     * @param input         current user input
+     * @param departureDate departure date 1 or 2
+     * @param timeOfTheDay  time of the day 1 ~ 6
+     * @return BusResponseObject
+     */
+    public BusResponseObject validateDepartureTime(String input, String departureDate, String timeOfTheDay) {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
-        try {
-            BusListSuccess successResponse = this.getBusLists(request);
-
-            List<BusList> busLists = successResponse.getResult();
-            LOGGER.info("busLists size {} list {}", busLists.size(), busLists);
-            if (Integer.parseInt(input) > busLists.size() && Integer.parseInt(input) > 0) {
-                hasError = true;
-                responseObject.setMessage("Invalid bus selected");
-            } else {
-                responseObject.setMessage(busLists.get(Integer.parseInt(input) - 1).getName());
-            }
-        } catch (Exception ex) {
-            hasError = true;
-            LOGGER.error("Error validating selected bus {}", ex.getMessage());
-            responseObject.setMessage("Error validating selected bus");
-        }
-        responseObject.setStatus(hasError);
-        return responseObject;
-    }
-
-    public BusResponseObject validateDepartureTime(String input) {
-        BusResponseObject responseObject = new BusResponseObject();
-        Boolean hasError = false;
-        List<BusTime> departureTimes = UTKit.getGetDepartureTime();
+        List<BusTime> departureTimes = UTKit.getDepartureTime(departureDate, timeOfTheDay);
         if (Boolean.TRUE.equals(UTKit.validateNumericalString(input))) {
             if (Integer.parseInt(input) > departureTimes.size() && Integer.parseInt(input) > 0) {
                 hasError = true;

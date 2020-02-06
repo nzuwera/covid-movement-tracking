@@ -10,6 +10,8 @@ import rw.centrika.ussd.domain.UssdMenu;
 import rw.centrika.ussd.helpers.enums.QuestionType;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -113,6 +115,7 @@ public class UTKit {
     }
 
     public static String getBusTime() {
+
         List<BusTime> busTimes = getGetDepartureTime();
         StringBuilder timeString = new StringBuilder();
         for (int i = 0; i < busTimes.size(); i++) {
@@ -148,11 +151,98 @@ public class UTKit {
         return listDepartureTime;
     }
 
+
+    public static List<BusTime> getDepartureTime(String departureDate, String timeOfTheDay) {
+
+        String startDate = EMPTY;
+        if (departureDate.equals("1")) {
+            startDate = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+        } else if (departureDate.equals("2")) {
+            startDate = LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_DATE);
+        }
+
+        Map<String, String[]> hoursInDay = new HashMap<>();
+        String[] night = {"00H00", "01H00", "02H00", "03H00"};
+        String[] earlyMorning = {"04H00", "05H00", "06H00", "07H00"};
+        String[] morning = {"08H00", "09H00", "10H00", "11H00"};
+        String[] afternoon = {"12H00", "13H00", "14H00", "15H00"};
+        String[] evening = {"16H00", "17H00", "18H00", "19H00"};
+        String[] earlyEvening = {"20H00", "21H00", "22H00", "23H00"};
+        hoursInDay.put("1", earlyMorning);
+        hoursInDay.put("2", morning);
+        hoursInDay.put("3", afternoon);
+        hoursInDay.put("4", evening);
+        hoursInDay.put("5", earlyEvening);
+        hoursInDay.put("6", night);
+        List<BusTime> busTimeList = new ArrayList<>();
+        String[] selectedTimes = hoursInDay.get(timeOfTheDay);
+        for (String startTime : selectedTimes) {
+            busTimeList.add(new BusTime(startDate, startTime));
+        }
+        return busTimeList;
+    }
+
+    public static String showDepartureTime(String departureDate, String timeOfTheDay){
+        List<BusTime> departureTimes = UTKit.getDepartureTime(departureDate,timeOfTheDay);
+        StringBuilder departureDateTime = new StringBuilder();
+        for (int i = 0; i < departureTimes.size(); i++) {
+            departureDateTime.append(i + 1);
+            departureDateTime.append(UTKit.DOT);
+            departureDateTime.append(UTKit.BLANK);
+            departureDateTime.append(departureTimes.get(i).getStartDate());
+            departureDateTime.append(UTKit.BLANK);
+            departureDateTime.append(departureTimes.get(i).getStartTime());
+            departureDateTime.append(UTKit.EOL);
+        }
+        return departureDateTime.toString();
+    }
+
     public static boolean validateSafariBusCardForm(String upiNumber) {
         return upiNumber.toUpperCase().matches(CENTRIKA_CARD);
     }
 
     public static Boolean validateNumericalString(String number) {
         return number.matches(NUMBERS);
+    }
+
+    public static String getTimeOfTheDay(Language language) {
+        String timeOfTheDay;
+        if (language == Language.ENG) {
+            timeOfTheDay = "1. Early Morning (4AM-8AM)" + EOL +
+                    "2. Morning(8AM-12PM)" + EOL +
+                    "3. Afternoon(12PM-4PM)" + EOL +
+                    "4. Evening(4PM-8PM)" + EOL +
+                    "5. Early Evening(8PM-12AM)" + EOL +
+                    "6. Night(12AM-4AM)";
+        } else {
+            timeOfTheDay = "1. Kare mu gitondo (4AM-8AM)" + EOL +
+                    "2. Mu gitondo (8AM-12PM)" + EOL +
+                    "3. Nyuma ya saa sita(12PM-4PM)" + EOL +
+                    "4. Ku mugoroba(4PM-8PM)" + EOL +
+                    "5. Ni joro(8PM-12AM)" + EOL +
+                    "6. Mu gicuku(12AM-4AM)";
+        }
+        return timeOfTheDay;
+    }
+
+
+    public static String getDepartureDate(Language language) {
+        String timeOfTheDay;
+        if (language == Language.ENG) {
+            timeOfTheDay = "1. Today" + EOL +
+                    "2. Tomorrow";
+        } else {
+            timeOfTheDay = "1. Uyu munsi" + EOL +
+                    "2. Ejo";
+        }
+        return timeOfTheDay;
+    }
+
+    public static Boolean validateTimeOfTheDay(String input) {
+        return Integer.parseInt(input) <= 6 && Integer.parseInt(input) > 0;
+    }
+
+    public static Boolean validateDepartureDate(String input) {
+        return Integer.parseInt(input) == 2 || Integer.parseInt(input) == 1;
     }
 }
