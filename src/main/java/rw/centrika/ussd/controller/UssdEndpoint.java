@@ -11,10 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import rw.centrika.ussd.domain.Language;
 import rw.centrika.ussd.domain.Session;
 import rw.centrika.ussd.domain.UserAccount;
-import rw.centrika.ussd.helpers.BusStopSuccessResponse;
-import rw.centrika.ussd.helpers.UTKit;
-import rw.centrika.ussd.helpers.UssdRequest;
-import rw.centrika.ussd.helpers.UssdResponse;
+import rw.centrika.ussd.helpers.*;
 import rw.centrika.ussd.helpers.enums.Freeflow;
 import rw.centrika.ussd.helpers.enums.Question;
 import rw.centrika.ussd.helpers.enums.Questionnaire;
@@ -155,6 +152,11 @@ public class UssdEndpoint {
     @GetMapping(value = "/stops")
     public BusStopSuccessResponse getBusStops() {
         return bookingService.getBusStops();
+    }
+
+    @GetMapping(value = "/balance")
+    public BusResponseObject getCardBalance() {
+        return bookingService.validateBusCard("CENT123456789012","1950");
     }
 
 }

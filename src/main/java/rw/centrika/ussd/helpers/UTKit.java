@@ -25,6 +25,7 @@ public class UTKit {
     public static final String JOINER = ":";
     public static final String EMPTY = "";
     public static final String BLANK = " ";
+    public static final String UNDERSCORE = "_";
     public static final String FREE_FLOW_HEADER = "Freeflow";
     public static final String DOT = ".";
     private static final String CENTRIKA_CARD = "^CENT\\d{12}$"; // CENT190701000753

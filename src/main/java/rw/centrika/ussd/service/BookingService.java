@@ -9,10 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import rw.centrika.ussd.domain.BusList;
-import rw.centrika.ussd.domain.BusListRequest;
-import rw.centrika.ussd.domain.BusStop;
-import rw.centrika.ussd.domain.BusTime;
+import rw.centrika.ussd.domain.*;
 import rw.centrika.ussd.helpers.*;
 
 import java.util.ArrayList;
@@ -25,6 +22,9 @@ public class BookingService {
     private static final String AUTH = "bearer 7yBp-NqiV1IedRfK1SxLRnF0-WboRuvvLVSGJW-8MgQCOXN7c9ORpkuSafEe9n4Bvo31Gc-zRxNPZzkCWLg1r5Ls8SIcUoseP3iZzpzVILyeRcwsLz0q5kBxUV4FElpnjbQ8Zg715R_3wCkDOfvphhJ32c8QZlPFgYeGHrSTxDsaZfSfqswUjnvvRWgNXrpMGOb_ZRsuAaJXSKvuL8SH70ZZ2LjuhViArtYvbFHl--MVCHZiVEO1EuWNAceh8QS8933rju2V4GigCiIluNmrPM_n_q8wUgvnSQfOntQk2pm-AzeLgh4tFUB0YUtw7qkr2q1WQHxljXtnwd8pqg5X_O6Id9lrc38HLsflL9KqAVl1XGAFd2zOlwmLbyOwSE-R3bF83OM3PQ6irWVGWyXw-TpatbzRibyWJxc2Rh44c8seBV7jLkIvf1XB2xQW9z6vseoKMHrjW_5fyiZT4Izr1hvbXO3qA7gd8iLusI4tjcQmHV-2qhz0I3xbe2j-DfVKn6E5Amito3xrq43ULsUOTb2E4Or6cZqBBfrlj7OVLIY-bGSGYLOvDm6-aR1con3YWdNkUKTwZslC1Lc-JOw46t3wcAbm425CrhVZM9CYDaoibdJNrlBcISh2P2Y3ZyuFTDuBRB_ZIteaAyDNzu3bevf7HqAEZ07BlfPB9jTKa91VV9FgzK-Z_1G1zl3W92ut";
     private static final String QUICK_BUS_GET_STOPS = "https://quickbus.centrika.rw/api/quickbus/QuickBusGetStops";
     private static final String QUICK_BUS_GET_LISTS = "http://quickbus.centrika.rw/api/quickbus/GetQuickBusSearchedList";
+    private static final String QUICK_BUS_VALIDATE_CARD = "https://loyalty.centrika.rw/api/api/GetSafariBusCardBalance";
+    private static final String QUICK_BUS_GET_SAFARIBUS_TICKET = "https://loyalty.centrika.rw/api/api/GetSafariBusTicket";
+
     private RestTemplate restTemplate;
 
     @Autowired
@@ -32,6 +32,15 @@ public class BookingService {
         this.restTemplate = restTemplate;
     }
 
+    public BookingService() {
+
+    }
+
+    /**
+     * Get available bus name
+     *
+     * @return BusStopSuccessResponse
+     */
     public BusStopSuccessResponse getBusStops() {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(Message.CONTENT_TYPE.string, String.valueOf(MediaType.APPLICATION_JSON));
@@ -64,6 +73,12 @@ public class BookingService {
         return successResponse;
     }
 
+    /**
+     * Get Bus list from loyalty
+     *
+     * @param listRequest bus list request
+     * @return BusListSuccess
+     */
     public BusListSuccess getBusLists(BusListRequest listRequest) {
         BusListSuccess successResponse = new BusListSuccess();
 
@@ -100,6 +115,12 @@ public class BookingService {
         return successResponse;
     }
 
+    /**
+     * Show available buses
+     *
+     * @param busListSuccess BusListSuccess
+     * @return BusResponseObject
+     */
     public BusResponseObject showAvailableBuses(BusListSuccess busListSuccess) {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
@@ -128,6 +149,13 @@ public class BookingService {
         return responseObject;
     }
 
+    /**
+     * Validate bus list
+     *
+     * @param input          input
+     * @param busListSuccess BusListSuccess
+     * @return BusResponseObject
+     */
     public BusResponseObject validateBusList(String input, BusListSuccess busListSuccess) {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
@@ -147,6 +175,12 @@ public class BookingService {
         return responseObject;
     }
 
+    /**
+     * GetStopByName
+     *
+     * @param name stop name
+     * @return BusResponseObject
+     */
     public BusResponseObject getStopByName(String name) {
         BusResponseObject responseObject = new BusResponseObject();
         Boolean hasError = false;
@@ -230,7 +264,7 @@ public class BookingService {
      * @param input         current user input
      * @param departureDate departure date 1 or 2
      * @param timeOfTheDay  time of the day 1 ~ 6
-     * @return BusResponseObject
+     * @return Selected time dd/mm/yyyy hhHmm
      */
     public BusResponseObject validateDepartureTime(String input, String departureDate, String timeOfTheDay) {
         BusResponseObject responseObject = new BusResponseObject();
@@ -252,17 +286,57 @@ public class BookingService {
         return responseObject;
     }
 
-    public BusResponseObject validateBusCard(String input) {
+    /**
+     * Validate bus card format and balance
+     *
+     * @param input card number
+     * @return BusResponseObject
+     */
+    public BusResponseObject validateBusCard(String input, String amount) {
+        LOGGER.info("tripFare {}", amount);
+        CardValidationRequest cardValidationRequest = new CardValidationRequest();
+        cardValidationRequest.setCardSerialNumber(input);
+
+
         Boolean hasError = false;
+        String message = "";
         BusResponseObject responseObject = new BusResponseObject();
         if (Boolean.FALSE.equals(UTKit.validateSafariBusCardForm(input))) {
             hasError = true;
-            responseObject.setMessage("Invalid card format CENTxxxxxxxxxxxx");
+            responseObject.setMessage("Invalid card");
         } else {
-            // Call API to validate card
-            responseObject.setMessage("valide card format");
+            try {
+                Double tripFare = Double.parseDouble(amount);
+                CardValidationResponse validationResponse = getCardInfo(cardValidationRequest);
+                Double cardBalance = validationResponse.getResult().getBalance();
+                if (cardBalance >= tripFare) {
+                    message = "Success";
+                } else {
+                    hasError = true;
+                    message = "Insufficient funds";
+                }
+            } catch (Exception ex) {
+                hasError = true;
+                message = "Card validation error";
+                LOGGER.error("Card validation error {}", ex);
+            }
         }
+        LOGGER.info("validateBusCard validationResponse {}", message);
         responseObject.setStatus(hasError);
+        responseObject.setMessage(message);
         return responseObject;
+    }
+
+    public CardValidationResponse getCardInfo(CardValidationRequest cardValidationRequest) {
+        try {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add(Message.CONTENT_TYPE.string, String.valueOf(MediaType.APPLICATION_JSON));
+            httpHeaders.add(Message.AUTHORIZATION.string, AUTH);
+            HttpEntity<CardValidationRequest> httpEntity = new HttpEntity<>(cardValidationRequest, httpHeaders);
+            ResponseEntity<CardValidationResponse> responseEntity = restTemplate.postForEntity(QUICK_BUS_VALIDATE_CARD, httpEntity, CardValidationResponse.class);
+            return responseEntity.getBody();
+        } catch (Exception ex) {
+            throw ex;
+        }
     }
 }
