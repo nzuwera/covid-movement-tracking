@@ -283,7 +283,7 @@ public class NavigationManager implements INavigationManager {
                         stringBuilder.append(UTKit.EOL);
                         stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                         stringBuilder.append(UTKit.EOL);
-                        stringBuilder.append(UTKit.showDepartureTime(departureDate,timeOfTheDay));
+                        stringBuilder.append(UTKit.showDepartureTime(departureDate, timeOfTheDay));
                     }
                 } catch (Exception ex) {
                     LOGGER.error(ex.getCause().getMessage());
@@ -292,7 +292,7 @@ public class NavigationManager implements INavigationManager {
                     stringBuilder.append(UTKit.EOL);
                     stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                     stringBuilder.append(UTKit.EOL);
-                    stringBuilder.append(UTKit.showDepartureTime(departureDate,timeOfTheDay));
+                    stringBuilder.append(UTKit.showDepartureTime(departureDate, timeOfTheDay));
                 }
             } else {
                 hasError = true;
@@ -300,7 +300,7 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(UTKit.showDepartureTime(departureDate,timeOfTheDay));
+                stringBuilder.append(UTKit.showDepartureTime(departureDate, timeOfTheDay));
             }
         } else if (selectedQuestion == Question.SHOW_AVAILABLE_BUSES) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
@@ -316,10 +316,14 @@ public class NavigationManager implements INavigationManager {
             BusResponseObject availableBusResponse = bookingService.validateBusList(request.getInput(), listSuccess);
             if (Boolean.FALSE.equals(availableBusResponse.getStatus())) {
                 String companyName = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCompanyName();
-                String busName = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getName().replace(UTKit.JOINER, UTKit.EMPTY).replace(UTKit.BLANK + UTKit.BLANK, UTKit.BLANK);
+                cityIn = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCityIn();
+                cityOut = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCityOut();
+                String departureDate = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getTargetDate();
+                departureTime = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getDepartureTime();
                 String amount = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getTotalAmount();
                 String currency = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getCurrency();
-                lastInput = session.getLastInput() + UTKit.JOINER + companyName + UTKit.BLANK + busName + UTKit.BLANK + amount + currency;
+                String trajetId = listSuccess.getResult().get(Integer.parseInt(request.getInput()) - 1).getTrajetId();
+                lastInput = session.getLastInput() + UTKit.JOINER + companyName + UTKit.UNDERSCORE + cityIn + UTKit.UNDERSCORE + cityOut + UTKit.UNDERSCORE + departureDate + UTKit.UNDERSCORE + departureTime + UTKit.UNDERSCORE + amount + UTKit.UNDERSCORE + currency + UTKit.UNDERSCORE + trajetId;
                 stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
             } else {
                 hasError = true;
@@ -332,14 +336,19 @@ public class NavigationManager implements INavigationManager {
         } else if (selectedQuestion == Question.ENTER_BUS_CARD) {
             currentMenu = menuService.getByQuestion(selectedQuestion);
             nexMenus = menuService.getNextMenus(currentMenu);
-            BusResponseObject cardValidation = bookingService.validateBusCard(request.getInput());
+            String sessionInputs = session.getLastInput().split(UTKit.JOINER)[7];
+            String[] tripDetails = sessionInputs.split(UTKit.UNDERSCORE);
+            BusResponseObject cardValidation = bookingService.validateBusCard(request.getInput(), tripDetails[5]);
             if (Boolean.FALSE.equals(cardValidation.getStatus())) {
                 String previousInput = UTKit.getLastInput(session.getLastInput());
                 stringBuilder.append(UTKit.listMenus(sessionLanguage, nexMenus));
                 stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(previousInput.replace(UTKit.BLANK, UTKit.EOL));
-                stringBuilder.append(UTKit.EOL);
-                stringBuilder.append(request.getInput());
+                // Show confirmation message
+                String[] tripInfo = previousInput.split(UTKit.UNDERSCORE);
+                String confirmationMessage = String.format("Bus %s" + UTKit.EOL + "Trip %s - %s" + UTKit.EOL + "Date %s %s" + UTKit.EOL + "Amount %s"+ UTKit.EOL+UTKit.EOL + "1) Confirm\n2) Cancel",tripInfo[0],tripInfo[1],tripInfo[2],tripInfo[3],tripInfo[4],tripInfo[5]);
+                stringBuilder.append(confirmationMessage);
+//                stringBuilder.append(UTKit.EOL);
+//                stringBuilder.append(request.getInput());
                 leaf = nexMenus.get(0).getLeaf();
             } else {
                 leaf = false;
@@ -348,6 +357,14 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 stringBuilder.append(UTKit.setTitle(sessionLanguage, currentMenu));
             }
+        } else if (selectedQuestion == Question.CONFIRM_TICKET_BOOKING) {
+            currentMenu = menuService.getByQuestion(selectedQuestion);
+            nexMenus = menuService.getNextMenus(currentMenu);
+            String[] previousInput = session.getLastInput().split(UTKit.JOINER);
+            String cardNumber = previousInput[previousInput.length - 1];
+            String[] tripInfo = previousInput[previousInput.length - 2].split(UTKit.UNDERSCORE);
+
+
         } else {
             LOGGER.info("=================== access last else ===================");
             selectedQuestion = menus.get(0).getQuestion();
