@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CardPaymentResponse {
 
     @JsonProperty("result")
-    private CardPaymentResponse result;
+    private CardPaymentInfo result;
     private String status;
     @JsonProperty("error")
     private ErrorInfo error;
@@ -13,17 +13,17 @@ public class CardPaymentResponse {
     public CardPaymentResponse() {
     }
 
-    public CardPaymentResponse(CardPaymentResponse result, String status, ErrorInfo error) {
+    public CardPaymentResponse(CardPaymentInfo result, String status, ErrorInfo error) {
         this.result = result;
         this.status = status;
         this.error = error;
     }
 
-    public CardPaymentResponse getResult() {
+    public CardPaymentInfo getResult() {
         return result;
     }
 
-    public void setName(CardPaymentResponse result) {
+    public void setResult(CardPaymentInfo result) {
         this.result = result;
     }
 

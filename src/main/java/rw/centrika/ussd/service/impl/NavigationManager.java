@@ -100,6 +100,9 @@ public class NavigationManager implements INavigationManager {
         if (Boolean.FALSE.equals(responseObject.getHasError())) {
             sessionService.update(session);
         }
+        if (Boolean.TRUE.equals(leaf)) {
+            sessionService.delete(session);
+        }
 
         response.setFreeflow(leaf);
         response.setMessage(displayMessage);
@@ -345,10 +348,8 @@ public class NavigationManager implements INavigationManager {
                 stringBuilder.append(UTKit.EOL);
                 // Show confirmation message
                 String[] tripInfo = previousInput.split(UTKit.UNDERSCORE);
-                String confirmationMessage = String.format("Bus %s" + UTKit.EOL + "Trip %s - %s" + UTKit.EOL + "Date %s %s" + UTKit.EOL + "Amount %s"+ UTKit.EOL+UTKit.EOL + "1) Confirm\n2) Cancel",tripInfo[0],tripInfo[1],tripInfo[2],tripInfo[3],tripInfo[4],tripInfo[5]);
+                String confirmationMessage = String.format("Bus: %s" + UTKit.EOL + "Trip: %s - %s" + UTKit.EOL + "Date: %s %s" + UTKit.EOL + "Amount %s" + UTKit.EOL + UTKit.EOL + "1. Confirm", tripInfo[0], tripInfo[1], tripInfo[2], tripInfo[3], tripInfo[4], tripInfo[5]);
                 stringBuilder.append(confirmationMessage);
-//                stringBuilder.append(UTKit.EOL);
-//                stringBuilder.append(request.getInput());
                 leaf = nexMenus.get(0).getLeaf();
             } else {
                 leaf = false;
@@ -363,6 +364,34 @@ public class NavigationManager implements INavigationManager {
             String[] previousInput = session.getLastInput().split(UTKit.JOINER);
             String cardNumber = previousInput[previousInput.length - 1];
             String[] tripInfo = previousInput[previousInput.length - 2].split(UTKit.UNDERSCORE);
+            String company = tripInfo[0];
+            String cityIn = tripInfo[1];
+            String cityOut = tripInfo[2];
+            String departureDate = tripInfo[3];
+            String departureTime = tripInfo[4];
+            String amount = tripInfo[5];
+            String saleId = tripInfo[7];
+            //  CardPaymentRequest(int idSale, String departureDate, String departureTime, String cityIn, String cityOut, String cardNumber, String creator)
+
+            if (request.getInput().equals("1")) {
+                CardPaymentResponse paymentResponse = bookingService.getSafariBusTicket(new CardPaymentRequest(Integer.parseInt(saleId), departureDate, departureTime, cityIn, cityOut, cardNumber, request.getMsisdn()));
+                if (paymentResponse.getResult().getMessage().equals("Reservation OK")) {
+                    leaf = nexMenus.get(0).getLeaf();
+                } else {
+                    hasError = true;
+                    stringBuilder.append(paymentResponse.getResult().getMessage());
+                }
+            } else {
+                hasError = true;
+                stringBuilder.append("Invalid selection");
+                String confirmationMessage = String.format("Bus: %s" + UTKit.EOL +
+                        "Trip: %s - %s" + UTKit.EOL +
+                        "Date: %s %s" + UTKit.EOL +
+                        "Amount %s" + UTKit.EOL + UTKit.EOL +
+                        "1. Confirm", company, cityIn, cityOut, departureDate, departureTime, amount);
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(confirmationMessage);
+            }
 
 
         } else {

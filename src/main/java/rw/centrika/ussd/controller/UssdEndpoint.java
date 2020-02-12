@@ -5,12 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import rw.centrika.ussd.domain.Language;
-import rw.centrika.ussd.domain.Session;
-import rw.centrika.ussd.domain.UserAccount;
+import org.springframework.web.bind.annotation.*;
+import rw.centrika.ussd.domain.*;
 import rw.centrika.ussd.helpers.*;
 import rw.centrika.ussd.helpers.enums.Freeflow;
 import rw.centrika.ussd.helpers.enums.Question;
@@ -44,6 +40,12 @@ public class UssdEndpoint {
         this.bookingService = bookingService;
     }
 
+    /**
+     * USSD handler
+     * @param request ussd request normally get query parameters
+     * @param httpResponse http response with headers containing Freeflow
+     * @return USSD response
+     */
     @GetMapping(value = "/centrika")
     public String ussdHandler(UssdRequest request, HttpServletResponse httpResponse) {
 
@@ -154,9 +156,9 @@ public class UssdEndpoint {
         return bookingService.getBusStops();
     }
 
-    @GetMapping(value = "/balance")
-    public BusResponseObject getCardBalance() {
-        return bookingService.validateBusCard("CENT123456789012","1950");
+    @PostMapping(value = "/card-info")
+    public CardValidationResponse getCardBalance(@RequestBody CardValidationRequest validationRequest) {
+        return bookingService.getSafariBusCardBalance(validationRequest);
     }
 
 }
