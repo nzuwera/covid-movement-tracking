@@ -23,7 +23,7 @@ public class BookingService {
     private static final String QUICK_BUS_GET_STOPS = "https://quickbus.centrika.rw/api/quickbus/QuickBusGetStops";
     private static final String QUICK_BUS_GET_LISTS = "http://quickbus.centrika.rw/api/quickbus/GetQuickBusSearchedList";
     private static final String QUICK_BUS_VALIDATE_CARD = "https://loyalty.centrika.rw/api/api/GetSafariBusCardBalance";
-    private static final String QUICK_BUS_GET_SAFARIBUS_TICKET = "https://loyalty.centrika.rw/api/api/GetSafariBusTicket";
+    private static final String QUICK_BUS_GET_SAFARI_BUS_TICKET = "https://loyalty.centrika.rw/api/api/GetSafariBusTicket";
 
     private RestTemplate restTemplate;
 
@@ -45,7 +45,6 @@ public class BookingService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(Message.CONTENT_TYPE.string, String.valueOf(MediaType.APPLICATION_JSON));
         httpHeaders.add(Message.AUTHORIZATION.string, AUTH);
-
         HttpEntity httpEntity = new HttpEntity(httpHeaders);
 
 
@@ -307,7 +306,7 @@ public class BookingService {
         } else {
             try {
                 Double tripFare = Double.parseDouble(amount);
-                CardValidationResponse validationResponse = getCardInfo(cardValidationRequest);
+                CardValidationResponse validationResponse = getSafariBusCardBalance(cardValidationRequest);
                 Double cardBalance = validationResponse.getResult().getBalance();
                 if (cardBalance >= tripFare) {
                     message = "Success";
@@ -327,7 +326,13 @@ public class BookingService {
         return responseObject;
     }
 
-    public CardValidationResponse getCardInfo(CardValidationRequest cardValidationRequest) {
+    /**
+     * GetSafariBusCardBalance
+     *
+     * @param cardValidationRequest validation request
+     * @return validation response
+     */
+    public CardValidationResponse getSafariBusCardBalance(CardValidationRequest cardValidationRequest) {
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(Message.CONTENT_TYPE.string, String.valueOf(MediaType.APPLICATION_JSON));
@@ -336,7 +341,28 @@ public class BookingService {
             ResponseEntity<CardValidationResponse> responseEntity = restTemplate.postForEntity(QUICK_BUS_VALIDATE_CARD, httpEntity, CardValidationResponse.class);
             return responseEntity.getBody();
         } catch (Exception ex) {
-            throw ex;
+            LOGGER.error("Call cardValidationApi error {}", ex);
+            return new CardValidationResponse();
+        }
+    }
+
+    /**
+     * GetSafariBusTicket
+     *
+     * @param paymentRequest payment request
+     * @return CardPaymentResponse
+     */
+    public CardPaymentResponse getSafariBusTicket(CardPaymentRequest paymentRequest) {
+        try {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add(Message.CONTENT_TYPE.string, String.valueOf(MediaType.APPLICATION_JSON));
+            httpHeaders.add(Message.AUTHORIZATION.string, AUTH);
+            HttpEntity<CardPaymentRequest> httpEntity = new HttpEntity<>(paymentRequest, httpHeaders);
+            ResponseEntity<CardPaymentResponse> responseEntity = restTemplate.postForEntity(QUICK_BUS_GET_SAFARI_BUS_TICKET, httpEntity, CardPaymentResponse.class);
+            return responseEntity.getBody();
+        } catch (Exception ex) {
+            LOGGER.error("Call cardPaymentApi error {}", ex);
+            return new CardPaymentResponse();
         }
     }
 }
