@@ -124,7 +124,7 @@ public class UssdEndpoint {
                 /*
                  * USSD Forward navigation:
                  *
-                 * Change User's prefered language.
+                 * Change User's preferred language.
                  */
                 ussdResponse = navigationManager.buildMenu(request, session);
             }
