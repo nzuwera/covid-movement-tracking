@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.nzuwera.ussd</groupId>
-    <artifactId>covid-movement-tracking</artifactId>
+    <artifactId>covidtracking</artifactId>
     <version>0.0.1</version>
     <name>covid-movement-tracking</name>
     <description>Covid-19 movement tracking ussd application</description>
