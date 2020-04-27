@@ -5,7 +5,8 @@ public enum Message {
     ERROR("Error occured : %s"),
     ALREADY_EXISTS("%s already exists"),
     CONTENT_TYPE("Content-Type"),
-    AUTHORIZATION("Authorization");
+    AUTHORIZATION("Authorization"),
+    CONFIRMATION_MESSAGE("Aho uvuye %s\nAho ugiye %s\nUmugenzi %s\n\n1. Emeza");
 
     public final String string;
 

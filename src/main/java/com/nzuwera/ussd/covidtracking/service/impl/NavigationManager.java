@@ -2,15 +2,13 @@ package com.nzuwera.ussd.covidtracking.service.impl;
 
 import com.nzuwera.ussd.covidtracking.domain.Session;
 import com.nzuwera.ussd.covidtracking.domain.UssdMenu;
-import com.nzuwera.ussd.covidtracking.helpers.ResponseObject;
-import com.nzuwera.ussd.covidtracking.helpers.UTKit;
-import com.nzuwera.ussd.covidtracking.helpers.UssdRequest;
-import com.nzuwera.ussd.covidtracking.helpers.UssdResponse;
+import com.nzuwera.ussd.covidtracking.helpers.*;
 import com.nzuwera.ussd.covidtracking.helpers.enums.Question;
 import com.nzuwera.ussd.covidtracking.helpers.enums.Visibility;
 import com.nzuwera.ussd.covidtracking.service.interfaces.IMenuService;
 import com.nzuwera.ussd.covidtracking.service.interfaces.INavigationManager;
 import com.nzuwera.ussd.covidtracking.service.interfaces.ISessionService;
+import com.nzuwera.ussd.covidtracking.validators.QuestionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +113,69 @@ public class NavigationManager implements INavigationManager {
             leaf = currentMenu.getIsLeaf();
             stringBuilder.append("Murakaza neza kuri COVID-19.");
             stringBuilder.append(UTKit.EOL);
+            stringBuilder.append(nexMenus.get(0).getTitleKin());
+        } else if (selectedQuestion == Question.DEPARTURE) {
+            previousQuestion = selectedQuestion;
+            selectedQuestion = nexMenus.get(0).getQuestion();
+            leaf = currentMenu.getIsLeaf();
+            if (Boolean.TRUE.equals(QuestionValidator.validateStringWord(request.getInput()))) {
+                stringBuilder.append(nexMenus.get(0).getTitleKin());
+            } else {
+                hasError = true;
+                stringBuilder.append("Andika neza aho uva");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.DESTINATION) {
+            previousQuestion = selectedQuestion;
+            selectedQuestion = nexMenus.get(0).getQuestion();
+            leaf = currentMenu.getIsLeaf();
+            if (Boolean.TRUE.equals(QuestionValidator.validateStringWord(request.getInput()))) {
+                stringBuilder.append(nexMenus.get(0).getTitleKin());
+            } else {
+                hasError = true;
+                stringBuilder.append("Andika neza aho ugiye");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.PASSENGER) {
+            previousQuestion = selectedQuestion;
+            selectedQuestion = nexMenus.get(0).getQuestion();
+            leaf = currentMenu.getIsLeaf();
+            if (Boolean.TRUE.equals(QuestionValidator.validateMtnPhone(request.getInput()))) {
+                stringBuilder.append(nexMenus.get(0).getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                // Confirmation screen
+                String[] userInputs = lastInput.split(UTKit.JOINER);
+                stringBuilder.append(String.format(Message.CONFIRMATION_MESSAGE.string, userInputs[1], userInputs[2], userInputs[3]));
+            } else {
+                hasError = true;
+                stringBuilder.append("Andika neza nimero ya telephone.");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+            }
+        } else if (selectedQuestion == Question.CONFIRM) {
+            previousQuestion = selectedQuestion;
+            selectedQuestion = nexMenus.get(0).getQuestion();
+            leaf = currentMenu.getIsLeaf();
+            if (request.getInput().equals("1")) {
+                leaf = nexMenus.get(0).getIsLeaf();
+                stringBuilder.append(nexMenus.get(0).getTitleKin());
+                // TODO save all transactions
+            } else {
+                hasError = true;
+                stringBuilder.append("Ibyo usabye ntibibashije kuboneka, ongere ugerageze.");
+                stringBuilder.append(UTKit.EOL);
+                stringBuilder.append(currentMenu.getTitleKin());
+                stringBuilder.append(UTKit.EOL);
+                // Confirmation screen
+                String[] userInputs = lastInput.split(UTKit.JOINER);
+                stringBuilder.append(String.format(Message.CONFIRMATION_MESSAGE.string, userInputs[1], userInputs[2], userInputs[3]));
+            }
+        } else if (selectedQuestion == Question.COMPLETED) {
+            previousQuestion = selectedQuestion;
+            selectedQuestion = nexMenus.get(0).getQuestion();
+            leaf = currentMenu.getIsLeaf();
             stringBuilder.append(nexMenus.get(0).getTitleKin());
         } else {
             LOGGER.info("=================== access last else ===================");

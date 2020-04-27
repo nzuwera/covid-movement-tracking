@@ -53,7 +53,7 @@ public class UssdEndpoint {
         /*
          * Check if user has dialed *909# or is continuing an open session
          */
-        if (request.getNewrequest().equals("1") && request.getInput().startsWith("*") && request.getInput().endsWith("#")) {
+        if (request.getNewrequest().equals("1")) {
             /*
              * Set User default language to KIN
              */
