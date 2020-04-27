@@ -1,16 +1,11 @@
 package com.nzuwera.ussd.covidtracking.helpers;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Date;
 
 /**
  * USSD Tool Kit helper class
  */
 public class UTKit {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(UTKit.class);
 
     public static final String EOL = "\n";
     public static final String JOINER = ":";

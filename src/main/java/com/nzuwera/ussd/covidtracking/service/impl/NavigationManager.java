@@ -73,7 +73,6 @@ public class NavigationManager implements INavigationManager {
         session = currentSession;
         Question currentQuestion = session.getQuestion();
         UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
-        // List<UssdMenu> nextMenus = menuService.getNextMenus(currentMenu);
         ResponseObject responseObject = this.prepareDisplayMessage(ussdRequest, currentMenu);
         leaf = responseObject.getLeaf();
         LOGGER.info("LEAF {}", leaf);
