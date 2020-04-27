@@ -75,7 +75,6 @@ public class NavigationManager implements INavigationManager {
         UssdMenu currentMenu = menuService.getByQuestion(currentQuestion);
         ResponseObject responseObject = this.prepareDisplayMessage(ussdRequest, currentMenu);
         leaf = responseObject.getLeaf();
-        LOGGER.info("LEAF {}", leaf);
         String mainMenuString = "99. Aha banza";
         String displayMessage = (session.getQuestion() == Question.START || Boolean.TRUE.equals(leaf)) ? responseObject.getDisplayMessage() : responseObject.getDisplayMessage() + UTKit.EOL + UTKit.EOL + mainMenuString;
 
