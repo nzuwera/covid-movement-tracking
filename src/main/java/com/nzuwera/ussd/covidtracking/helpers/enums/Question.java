@@ -3,18 +3,9 @@ package com.nzuwera.ussd.covidtracking.helpers.enums;
 public enum Question {
     // Centrika Menus
     START,
-    TIME_OF_DAY,
-    CONFIRM_DEPARTURE,
     DESTINATION,
-    CONFIRM_DESTINATION,
     DEPARTURE,
-    DEPARTURE_DATE,
-    DEPARTURE_TIME,
-    SHOW_AVAILABLE_BUSES,
-    ENTER_BUS_CARD,
-    SHOW_BOOKING_MESSAGE,
-    LANGUAGE,
-    SELECT_LANGUAGE,
-    CONFIRM_TICKET_BOOKING
-
+    PASSENGER,
+    CONFIRM,
+    COMPLETED
 }

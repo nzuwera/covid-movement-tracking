@@ -8,7 +8,6 @@ import com.nzuwera.ussd.covidtracking.helpers.UssdResponse;
 import com.nzuwera.ussd.covidtracking.helpers.enums.Visibility;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 public interface INavigationManager {
 
@@ -20,6 +19,6 @@ public interface INavigationManager {
 
     String sendUssdResponse(UssdResponse ussdResponse, HttpServletResponse httpServletResponse);
 
-    ResponseObject prepareDisplayMessage(UssdRequest request, List<UssdMenu> menus);
+    ResponseObject prepareDisplayMessage(UssdRequest request, UssdMenu menu);
 
 }

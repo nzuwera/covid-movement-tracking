@@ -1,23 +1,21 @@
 package com.nzuwera.ussd.covidtracking.controller;
 
 
-import com.nzuwera.ussd.covidtracking.domain.*;
-import com.nzuwera.ussd.covidtracking.helpers.BusStopSuccessResponse;
+import com.nzuwera.ussd.covidtracking.domain.Session;
 import com.nzuwera.ussd.covidtracking.helpers.UTKit;
 import com.nzuwera.ussd.covidtracking.helpers.UssdRequest;
 import com.nzuwera.ussd.covidtracking.helpers.UssdResponse;
 import com.nzuwera.ussd.covidtracking.helpers.enums.Freeflow;
 import com.nzuwera.ussd.covidtracking.helpers.enums.Question;
-import com.nzuwera.ussd.covidtracking.helpers.enums.Questionnaire;
-import com.nzuwera.ussd.covidtracking.service.BookingService;
 import com.nzuwera.ussd.covidtracking.service.interfaces.INavigationManager;
 import com.nzuwera.ussd.covidtracking.service.interfaces.ISessionService;
-import com.nzuwera.ussd.covidtracking.service.interfaces.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
@@ -29,18 +27,13 @@ public class UssdEndpoint {
     private static final Logger LOGGER = LoggerFactory.getLogger(UssdEndpoint.class);
     @Value("${application.short-code}")
     private String shortCode;
-
-    private IUserService userService;
     private ISessionService sessionService;
     private INavigationManager navigationManager;
-    private BookingService bookingService;
 
     @Autowired
-    public UssdEndpoint(IUserService userService, ISessionService sessionService, INavigationManager navigationManager, BookingService bookingService) {
-        this.userService = userService;
+    public UssdEndpoint(ISessionService sessionService, INavigationManager navigationManager) {
         this.sessionService = sessionService;
         this.navigationManager = navigationManager;
-        this.bookingService = bookingService;
     }
 
     /**
@@ -49,7 +42,7 @@ public class UssdEndpoint {
      * @param httpResponse http response with headers containing Freeflow
      * @return USSD response
      */
-    @GetMapping(value = "/centrika")
+    @GetMapping(value = "/covidTracking")
     public String ussdHandler(UssdRequest request, HttpServletResponse httpResponse) {
 
         UssdResponse ussdResponse;
@@ -60,24 +53,19 @@ public class UssdEndpoint {
         /*
          * Check if user has dialed *909# or is continuing an open session
          */
-        if (request.getNewRequest().equals("1") && request.getInput().startsWith("*") && request.getInput().endsWith("#")) {
+        if (request.getNewrequest().equals("1") && request.getInput().startsWith("*") && request.getInput().endsWith("#")) {
             /*
              * Set User default language to KIN
              */
             session = new Session();
             session.setMsisdn(request.getMsisdn());
             session.setLastInput(request.getInput());
-            session.setLeaf(false);
-            session.setLoggedIn(false);
+            session.setIsLeaf(false);
             session.setTransactionDatetime(new Date());
-            session.setQuestionnaire(Questionnaire.MAIN);
             session.setPreviousQuestion(Question.START);
             session.setQuestion(Question.START);
-            session.setStartService(false);
-            session.setLanguage(Language.KIN);
-            if (Boolean.FALSE.equals(userService.exists(request.getMsisdn()))) {
-                userService.create(new UserAccount(request.getMsisdn()));
-            }
+            session.setLanguage("KIN");
+            session.setSessionId(request.getSessionID());
             /*
              * Check if a ussd session already exists
              */
@@ -88,7 +76,7 @@ public class UssdEndpoint {
                  *  - Must Not be the last menu
                  *  - Must not have expired
                  */
-                if (currentSession.getLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(currentSession.getTransactionDatetime()))) {
+                if (currentSession.getIsLeaf().equals(true) || Boolean.TRUE.equals(UTKit.isExpired(currentSession.getTransactionDatetime()))) {
                     sessionService.delete(currentSession);
                     sessionService.create(session);
                 } else {
@@ -107,7 +95,7 @@ public class UssdEndpoint {
                 ussdResponse = navigationManager.buildMenu(request, session);
                 ussdMessage = navigationManager.sendUssdResponse(ussdResponse, httpResponse);
             }
-        } else if (request.getNewRequest().equals("0")) {
+        } else if (request.getNewrequest().equals("0")) {
             /*
              * Continue USSD Navigation
              */
@@ -125,12 +113,11 @@ public class UssdEndpoint {
                  * USSD Backward navigation:
                  * - 99 Go to main menu
                  */
-                session.setQuestionnaire(Questionnaire.MAIN);
                 session.setPreviousQuestion(Question.START);
                 session.setQuestion(Question.START);
                 session.setLastInput(UTKit.EMPTY);
                 sessionService.update(session);
-                request.setNewRequest("1");
+                request.setNewrequest("1");
                 request.setInput(shortCode);
                 ussdResponse = navigationManager.buildMenu(request, session);
             } else {
@@ -152,16 +139,4 @@ public class UssdEndpoint {
         LOGGER.info("ussdResponse \n{}", ussdMessage);
         return ussdMessage;
     }
-
-
-    @GetMapping(value = "/stops")
-    public BusStopSuccessResponse getBusStops() {
-        return bookingService.getBusStops();
-    }
-
-    @PostMapping(value = "/card-info")
-    public CardValidationResponse getCardBalance(@RequestBody CardValidationRequest validationRequest) {
-        return bookingService.getSafariBusCardBalance(validationRequest);
-    }
-
 }
